@@ -2,6 +2,7 @@ node_modules/
 .next/
 .env
 .env.local
+
 # Playground: temporary experiments and tests that are not part of the final application
 app/auth-test 
 app/api/auth-test
