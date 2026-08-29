@@ -24,7 +24,7 @@
     "motion": "^12.42.2",
     "next": "latest",
     "postcss": "8.5.1",
-    "postgres": "^3.4.7",
+    "postgres": "^3.4.9",
     "react": "latest",
     "react-dom": "latest",
     "shadcn": "^4.16.2",
