@@ -25,3 +25,12 @@ export async function createProduct(
     quantity: Number(result[0].quantity),
   };
 }
+
+export async function getProducts() {
+  const data = await db.select().from(products);
+
+  return data.map((product) => ({
+    ...product,
+    quantity: Number(product.quantity),
+  }));
+}
