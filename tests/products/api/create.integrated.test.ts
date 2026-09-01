@@ -16,7 +16,7 @@ import { products } from "@/db/schema";
 
 import { eq } from "drizzle-orm";
 
-import { describe, it, expect } from "vitest";
+import { it, expect } from "vitest";
 
 // 1-
 
