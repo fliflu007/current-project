@@ -6,3 +6,6 @@ export const CreateProductSchema = z.object({
   description: z.string().optional(),
   quantity: z.number(),
 });
+
+// .partial() makes all fields optional for PATCH
+export const patchProductSchema = CreateProductSchema.partial();

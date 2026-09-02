@@ -1,4 +1,7 @@
+import { patchProductSchema } from "@/schemas/product";
 import { getProductById } from "@/services/products.service";
+import { patchProduct } from "@/services/products.service";
+import { ZodError } from "zod";
 
 export async function GET(
   request: Request,
@@ -51,5 +54,75 @@ export async function GET(
       },
       { status: 500 },
     );
+  }
+}
+
+///// PATCH function
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  // 1. TODO :Check authentication
+
+  // 2. TODO : Check authorization
+
+  // 3. Get product ID from URL
+  const { id } = await params;
+
+  // 4. Get JSON body
+  try {
+    const body = await request.json();
+
+    const cleanData = patchProductSchema.parse(body);
+    // 6. Call service
+    //    → updateProduct(id, cleanData)
+    const serviceResult = await patchProduct(id, cleanData);
+
+    if (serviceResult === null) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "NOT_FOUND",
+            message: "Product not found",
+          },
+        },
+        { status: 404 },
+      );
+    }
+    return Response.json(
+      {
+        data: serviceResult,
+        error: null,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    // if error type then 400
+    if (error instanceof ZodError) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid product data",
+            detail: error.flatten(),
+          },
+        },
+        { status: 400 },
+      );
+    } else {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Something went wrong",
+          },
+        },
+        { status: 500 },
+      );
+    }
   }
 }
