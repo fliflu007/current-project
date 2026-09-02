@@ -1,6 +1,7 @@
 import { products } from "@/db/schema";
 import { CreateProductInput } from "@/types/product";
 import { db } from "@/db";
+import { eq } from "drizzle-orm";
 
 export async function createProduct(
   companyId: string,
@@ -33,4 +34,17 @@ export async function getProducts() {
     ...product,
     quantity: Number(product.quantity),
   }));
+}
+
+export async function getProductById(id: string) {
+  const data = await db.select().from(products).where(eq(products.id, id));
+
+  if (!data[0]) {
+    return null;
+  }
+
+  return {
+    ...data[0],
+    quantity: Number(data[0].quantity),
+  };
 }
