@@ -74,3 +74,19 @@ export async function patchProduct(id: string, cleanData: PatchProductInput) {
     quantity: Number(product.quantity),
   };
 }
+
+export async function deleteProduct(id: string) {
+  const result = await db
+    .delete(products)
+    .where(eq(products.id, id))
+    .returning();
+
+  const product = result[0];
+
+  if (!product) return null;
+
+  return {
+    ...product,
+    quantity: Number(product.quantity),
+  };
+}

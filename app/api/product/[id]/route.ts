@@ -2,6 +2,7 @@ import { patchProductSchema } from "@/schemas/product";
 import { getProductById } from "@/services/products.service";
 import { patchProduct } from "@/services/products.service";
 import { ZodError } from "zod";
+import { deleteProduct } from "@/services/products.service";
 
 export async function GET(
   request: Request,
@@ -124,5 +125,40 @@ export async function PATCH(
         { status: 500 },
       );
     }
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  // authentification
+  // authorisation
+
+  try {
+    const result = await deleteProduct(id);
+    if (result !== null) {
+      return Response.json({ data: result, error: null }, { status: 200 });
+    }
+    return Response.json(
+      {
+        data: null,
+        error: { code: "NOT_FOUND", message: "product does not exist" },
+      },
+      { status: 404 },
+    );
+  } catch (error) {
+    return Response.json(
+      {
+        data: null,
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "something went wrong",
+        },
+      },
+      { status: 500 },
+    );
   }
 }
