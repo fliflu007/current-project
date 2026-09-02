@@ -1,15 +1,3 @@
-// test
-
-// successfull deletion
-// mock service returning full product
-// 200  and data
-
-// delete cporduct
-// mock null
-// expect 404
-
-// mock service throw error
-// expect 500
 import { it, vi, expect } from "vitest";
 import { deleteProduct } from "@/services/products.service";
 import { DELETE } from "@/app/api/product/[id]/route";
