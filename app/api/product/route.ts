@@ -2,15 +2,15 @@ import { CreateProductSchema } from "@/schemas/product";
 import { createProduct } from "@/services/products.service";
 import { ZodError } from "zod";
 
-// TEMPORARY PLAYGROUND ONLY
+//// TEMPORARY: hardcoded company ID.
+//   TODO: Replace with the authenticated user's companyId when auth is implemented.
+const companyID = "7c02bbc9-8053-459e-9d09-90cb9927c78d";
+
 const profile = {
   id: "test-user-id",
-  companyId: "test-company-id",
+  companyId: companyID,
   role: "admin",
 };
-
-// provided from a existing ID company in DB
-const companyID = "7c02bbc9-8053-459e-9d09-90cb9927c78d";
 
 export async function POST(request: Request) {
   try {
@@ -75,3 +75,36 @@ export async function POST(request: Request) {
     );
   }
 }
+
+import { getProducts } from "@/services/products.service";
+
+export async function GET() {
+  try {
+    // TODO: authenticate user
+    // TODO: get profile
+    // TODO: authorize user
+    // TODO: filter products by user's company
+
+    const data = await getProducts();
+
+    return Response.json(
+      {
+        data,
+        error: null,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    return Response.json(
+      {
+        data: null,
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Something went wrong",
+        },
+      },
+      { status: 500 },
+    );
+  }
+}
+//
