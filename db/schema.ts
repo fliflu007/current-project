@@ -69,12 +69,13 @@ export const productImages = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
 
-    productId: uuid("product_id")
+    // Change "product_id" to "productId" inside the database string too!
+    productId: uuid("productId")
       .notNull()
       .references(() => products.id),
 
     url: text("url").notNull(),
-
+    publicId: text("public_id").notNull(),
     isPrimary: boolean("is_primary").notNull().default(false),
 
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -83,7 +84,7 @@ export const productImages = pgTable(
   },
   (table) => [
     uniqueIndex("product_images_one_primary_idx")
-      .on(table.productId)
+      .on(table.productId) // Matches the TypeScript property name
       .where(sql`${table.isPrimary} = true`),
   ],
 );
@@ -93,7 +94,8 @@ export const inventoryMovements = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
 
-    productId: uuid("product_id")
+    // Change "product_id" to "productId" inside the database string too!
+    productId: uuid("productId")
       .notNull()
       .references(() => products.id),
 
@@ -104,17 +106,16 @@ export const inventoryMovements = pgTable(
       .notNull(),
 
     quantity: numeric("quantity").notNull(),
-
     comment: text("comment"),
   },
   (table) => [
+    // Matches the TypeScript property name
     index("inventory_movements_product_id_idx").on(table.productId),
 
     check(
       "inventory_movements_type_check",
       sql`${table.type} IN ('IN', 'OUT')`,
     ),
-
     check("inventory_movements_quantity_check", sql`${table.quantity} > 0`),
   ],
 );
