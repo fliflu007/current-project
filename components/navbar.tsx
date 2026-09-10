@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import AccountMenu from "@/components/account-menu";
 
 const items = [
   { value: "admin", label: "admin" },
@@ -21,12 +22,15 @@ const items = [
   { value: "viewer", label: "viewer" },
 ];
 
-export default function Navbar() {
+type NavbarProps = { isLoggedIn: boolean };
+
+export default function Navbar({ isLoggedIn }: NavbarProps) {
+  const authButtonText = isLoggedIn ? "Logout" : "Login";
   const [showMobileNav, setMobileNav] = useState(false);
   return (
     <nav className="h-14 ">
       {/*desktop*/}
-      <div className="container mx-auto px-6 grid grid-cols-2    sm:grid-cols-3 items-center h-full">
+      <div className="container mx-auto px-6 grid grid-cols-2 sm:grid-cols-3 items-center h-full">
         <div className=" navbar-brand flex gap-5 items-center p-3">
           <Image
             src="/logo.svg"
@@ -42,7 +46,12 @@ export default function Navbar() {
           {" "}
           PRODUCT PAGE
         </div>
-        <div className="right_side_block gap-4 hidden sm:flex ml-auto">
+        <AccountMenu
+          items={items}
+          isLoggedIn={isLoggedIn}
+          className="hidden sm:block lg:hidden ml-auto"
+        />
+        <div className="right_side_block gap-4 hidden lg:flex ml-auto">
           {" "}
           <Select items={items}>
             <SelectTrigger className="w-45">
@@ -59,7 +68,7 @@ export default function Navbar() {
             </SelectContent>
           </Select>
           <Button variant="secondary" size="lg">
-            Login
+            {authButtonText}
           </Button>
           <Button size="lg">SignUp</Button>
         </div>
@@ -99,7 +108,7 @@ export default function Navbar() {
             size="lg"
             className="rounded-none h-full w-full hover:bg-accent"
           >
-            Login
+            {authButtonText}
           </Button>
           <Button
             variant="ghost"
