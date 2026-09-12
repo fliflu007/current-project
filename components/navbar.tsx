@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-
 import { Menu } from "lucide-react";
+import { useState } from "react";
 
 import {
   Select,
@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "./ui/button";
-import { useState } from "react";
 import AccountMenu from "@/components/account-menu";
 
 const items = [
@@ -22,41 +21,47 @@ const items = [
   { value: "viewer", label: "viewer" },
 ];
 
-type NavbarProps = { isLoggedIn: boolean };
+type NavbarProps = {
+  isLoggedIn: boolean;
+};
 
 export default function Navbar({ isLoggedIn }: NavbarProps) {
   const authButtonText = isLoggedIn ? "Logout" : "Login";
   const [showMobileNav, setMobileNav] = useState(false);
+
   return (
-    <nav className="h-14 ">
-      {/*desktop*/}
-      <div className="container mx-auto px-6 grid grid-cols-2 sm:grid-cols-3 items-center h-full">
-        <div className=" navbar-brand flex gap-5 items-center p-3">
+    <nav className="relative h-14">
+      {/* Desktop */}
+      <div className="container mx-auto grid h-full grid-cols-2 items-center px-6 sm:grid-cols-3">
+        <div className="navbar-brand flex items-center gap-5 p-3">
           <Image
             src="/logo.svg"
             alt="Inventory System Logo"
             width={24}
             height={24}
-          ></Image>
-          <p className="text-sm font-extrabold whitespace-nowrap">
+          />
+
+          <p className="whitespace-nowrap text-sm font-extrabold">
             INVENTORY SYSTEM
           </p>
         </div>
-        <div className="text-c-label text-center sm:block hidden ">
-          {" "}
-          PRODUCT PAGE
+
+        <div className="text-c-label hidden text-center sm:block">
+          PRODUCTS PAGE
         </div>
+
         <AccountMenu
           items={items}
           isLoggedIn={isLoggedIn}
-          className="hidden sm:block lg:hidden ml-auto"
+          className="ml-auto hidden sm:block lg:hidden"
         />
-        <div className="right_side_block gap-4 hidden lg:flex ml-auto">
-          {" "}
+
+        <div className="right_side_block ml-auto hidden gap-4 lg:flex">
           <Select items={items}>
             <SelectTrigger className="w-45">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
+
             <SelectContent>
               <SelectGroup>
                 {items.map((item) => (
@@ -67,56 +72,67 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
               </SelectGroup>
             </SelectContent>
           </Select>
+
           <Button variant="secondary" size="lg">
             {authButtonText}
           </Button>
+
           <Button size="lg">SignUp</Button>
         </div>
+
+        {/* Mobile hamburger */}
         <Button
           onClick={() => {
             setMobileNav((prev) => !prev);
           }}
           variant="ghost"
           size="icon"
-          className="ml-auto sm:hidden hover:bg-accent"
+          className="ml-auto hover:bg-accent sm:hidden"
         >
           <Menu />
         </Button>
       </div>
-      {/*mobile */}
+
+      {/* Mobile menu */}
       {showMobileNav && (
-        <div className="sm:hidden grid h-52 grid-rows-4 items-center justify-items-center">
-          <p className="hover:bg-accent w-full h-full text-center flex items-center justify-center">
-            PRODUCT PAGE
-          </p>
-          <Select items={items}>
-            <SelectTrigger className="w-45">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {items.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="lg"
-            className="rounded-none h-full w-full hover:bg-accent"
-          >
-            {authButtonText}
-          </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            className="rounded-none h-full w-full hover:bg-accent"
-          >
-            SignUp
-          </Button>
+        <div className="absolute left-0 top-14 z-50 h-[calc(100vh-3.5rem)] w-full bg-background sm:hidden">
+          <div className="grid h-52 grid-rows-4 items-center justify-items-center">
+            <p className="flex h-full w-full items-center justify-center text-center hover:bg-accent">
+              PRODUCT PAGE
+            </p>
+
+            <Select items={items}>
+              <SelectTrigger className="w-45">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectGroup>
+                  {items.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="lg"
+              className="h-full w-full rounded-none hover:bg-accent"
+            >
+              {authButtonText}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="lg"
+              className="h-full w-full rounded-none hover:bg-accent"
+            >
+              SignUp
+            </Button>
+          </div>
         </div>
       )}
     </nav>
