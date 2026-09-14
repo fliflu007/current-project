@@ -10,9 +10,9 @@ import z from "zod";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Demo from "@/lib/auth/demo";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -21,11 +21,7 @@ const loginSchema = z.object({
 
 export default function Page() {
   const router = useRouter();
-  // TRY BUTTON DATA
-  const DEMO_EMAIL = "email.company@test.com";
-  const DEMO_PASSWORD = "$test$5";
-  const DEMO_COMPANY = "company_test";
-  //
+
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -36,8 +32,6 @@ export default function Page() {
   type LoginFormData = z.infer<typeof loginSchema>;
 
   const onSubmit = async (formdata: LoginFormData) => {
-    console.log(formdata);
-
     // Client Supabase Log
     const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -51,7 +45,7 @@ export default function Page() {
       return;
     } else {
       toast.success("You are logged in", {
-        duration: 700,
+        duration: 500,
       });
 
       setTimeout(() => {
@@ -99,13 +93,17 @@ export default function Page() {
           <Field orientation="vertical">
             <Button type="submit">Login</Button>
             <p className="text-center">or</p>
-            <Button variant="outline" type="button" className="bg-secondary">
-              Try Demo
-            </Button>
+            <Demo />
           </Field>
         </form>
         <p className="text-center text-muted-foreground p-4 pb-52">
-          Need an account ? <span className="text-foreground">Sign up</span>
+          Need an account ?{" "}
+          <span
+            onClick={() => router.push("/register")}
+            className="text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
+          >
+            Sign up
+          </span>
         </p>
       </div>
       <Toaster
