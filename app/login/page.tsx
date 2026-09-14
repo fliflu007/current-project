@@ -50,11 +50,13 @@ export default function Page() {
       });
       return;
     } else {
-      toast.success("You are Logged");
+      toast.success("You are logged in", {
+        duration: 700,
+      });
 
       setTimeout(() => {
         router.push("/");
-      }, 500);
+      }, 600);
     }
   };
 
