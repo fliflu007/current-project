@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import { logOut } from "@/lib/auth/logout";
 
 import {
   Select,
@@ -21,12 +22,7 @@ const items = [
   { value: "viewer", label: "viewer" },
 ];
 
-type NavbarProps = {
-  isLoggedIn: boolean;
-};
-
-export default function Navbar({ isLoggedIn }: NavbarProps) {
-  const authButtonText = isLoggedIn ? "Logout" : "Login";
+export default function Navbar() {
   const [showMobileNav, setMobileNav] = useState(false);
 
   return (
@@ -52,7 +48,6 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
 
         <AccountMenu
           items={items}
-          isLoggedIn={isLoggedIn}
           className="ml-auto hidden sm:block lg:hidden"
         />
 
@@ -72,10 +67,11 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          <Button variant="secondary" size="lg">
-            {authButtonText}
-          </Button>
+          <form action={logOut}>
+            <Button type="submit" variant="secondary" size="lg">
+              LogOut
+            </Button>
+          </form>
 
           <Button size="lg">SignUp</Button>
         </div>
@@ -116,14 +112,15 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
                 </SelectGroup>
               </SelectContent>
             </Select>
-
-            <Button
-              variant="ghost"
-              size="lg"
-              className="h-full w-full rounded-none hover:bg-accent"
-            >
-              {authButtonText}
-            </Button>
+            <form action={logOut}>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="h-full w-full rounded-none hover:bg-accent"
+              >
+                Logout
+              </Button>
+            </form>
 
             <Button
               variant="ghost"
