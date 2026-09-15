@@ -13,13 +13,18 @@ const profile = {
 };
 
 export async function POST(request: Request) {
+  // AuthTest
   try {
-    // authenticate
+    const user = await requireUser();
+    if (user instanceof Response) {
+      return user;
+    }
+
     /// if fail reject id 401 UNAUTHORIZED
 
     // get profil if issue likely 404/500 depending
     const profil = profile;
-    // (check role)
+
     if (profil.role === "view") {
       return Response.json(
         {
@@ -37,8 +42,6 @@ export async function POST(request: Request) {
 
     const data = CreateProductSchema.parse(body);
 
-    // call service
-    console.log("about to trigger services");
     const newProduct = await createProduct(companyID, data);
 
     return Response.json(
@@ -77,6 +80,8 @@ export async function POST(request: Request) {
 }
 
 import { getProducts } from "@/services/products.service";
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth/require-user";
 
 export async function GET() {
   try {
