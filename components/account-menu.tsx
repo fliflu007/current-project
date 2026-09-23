@@ -23,16 +23,11 @@ type AccountMenuProps = {
     value: string;
     label: string;
   }[];
-  isLoggedIn: boolean;
 
   className?: string;
 };
 
-export default function AccountMenu({
-  items,
-  className,
-  isLoggedIn,
-}: AccountMenuProps) {
+export default function AccountMenu({ items, className }: AccountMenuProps) {
   return (
     <div className={className}>
       <DropdownMenu>
@@ -60,11 +55,8 @@ export default function AccountMenu({
               </Select>
             </DropdownMenuItem>
 
-            {isLoggedIn ? (
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem>Login</DropdownMenuItem>
-            )}
+            <DropdownMenuItem>Logout</DropdownMenuItem>
+
             <DropdownMenuItem>Signup</DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
