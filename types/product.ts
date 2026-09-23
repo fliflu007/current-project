@@ -17,4 +17,35 @@ export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 
 // PATCH input
 // Type shape validated by the Zod input schema
-export type PatchProductInput = z.infer<typeof patchProductSchema>;
+
+// GET service output
+// DB product transformed for application use (quantity: string -> number)
+export type Product = Omit<ProductDB, "quantity"> & {
+  quantity: number;
+};
+
+import { patchExistingImagesSchema } from "@/schemas/product";
+import { patchNewImagesSchema } from "@/schemas/product";
+
+export type PatchProductinfos = z.infer<typeof patchProductSchema>;
+export type ExistingImageInput = z.infer<typeof patchExistingImagesSchema>;
+export type NewImageInput = z.infer<typeof patchNewImagesSchema>;
+export type NewImageWithFile = NewImageInput[number] & {
+  file: File;
+};
+
+// PATCH input
+// Type shape validated by the Zod input schema
+export type PatchProductServiceInput = {
+  productId: string;
+  productData?: PatchProductData;
+  existingImages?: ExistingImageInput;
+  newImages?: NewImageWithFile[];
+};
+
+export type NormalizedImages = {
+  status: "new" | "existing";
+  publicId: string | null;
+  isPrimary: boolean;
+  file: File | null;
+}[];
