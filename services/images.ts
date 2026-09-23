@@ -15,9 +15,13 @@ export async function deleteImage(
 }
 
 export async function addImage(file: File) {
+  // Convert File → ArrayBuffer to access the file's raw bytes
   const arrayBuffer = await file.arrayBuffer();
+  // Convert ArrayBuffer → Node.js Buffer for Cloudinary upload
   const buffer = Buffer.from(arrayBuffer);
 
+  // Wrap Cloudinary's callback-based upload in a Promise
+  // so we can await the upload result.
   const result = await new Promise<CloudinaryUploadResult>(
     (resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
