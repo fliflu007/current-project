@@ -1,87 +1,57 @@
 import { CreateProductSchema } from "@/schemas/product";
-import { createProduct } from "@/services/products.service";
+
 import { ZodError } from "zod";
+import z from "zod";
 
-//// TEMPORARY: hardcoded company ID.
-//   TODO: Replace with the authenticated user's companyId when auth is implemented.
-const companyID = "7c02bbc9-8053-459e-9d09-90cb9927c78d";
-
-const profile = {
-  id: "test-user-id",
-  companyId: companyID,
-  role: "admin",
-};
+import { getProducts } from "@/services/products.service";
+import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth/require-user";
+import { getCompanyId } from "@/services/products.service";
+import { createProduct } from "@/services/products.service";
 
 export async function POST(request: Request) {
-  // AuthTest
+  // Get UserID
   try {
     const user = await requireUser();
     if (user instanceof Response) {
       return user;
     }
 
-    /// if fail reject id 401 UNAUTHORIZED
-
-    // get profil if issue likely 404/500 depending
-    const profil = profile;
-
-    if (profil.role === "view") {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "FORBIDDEN",
-            message: "Viewer users cannot create products",
-          },
-        },
-        { status: 403 },
-      );
-    }
-    // Parse body
     const body = await request.json();
 
     const data = CreateProductSchema.parse(body);
 
-    const newProduct = await createProduct(companyID, data);
+    const companyId = await getCompanyId(user.id);
 
-    return Response.json(
-      {
-        data: newProduct,
-        error: null,
-      },
-      { status: 201 },
-    );
+    const product = await createProduct(companyId, data);
+
+    //success
+    return Response.json({ data: product, error: null });
   } catch (error) {
-    if (error instanceof ZodError) {
+    if (error instanceof z.ZodError) {
       return Response.json(
         {
           data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "invalid product data",
-            detail: error.flatten().fieldErrors,
-          },
+          error: { code: "VALIDATION_ERROR", message: "invalide request data" },
         },
         { status: 400 },
       );
     }
+    // All other errors
     console.error(error);
+
     return Response.json(
       {
         data: null,
         error: {
           code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong",
+          message: "internal server error",
         },
       },
       { status: 500 },
     );
   }
 }
-
-import { getProducts } from "@/services/products.service";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/auth/require-user";
 
 export async function GET() {
   try {
