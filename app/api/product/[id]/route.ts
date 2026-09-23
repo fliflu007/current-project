@@ -1,20 +1,21 @@
-import { patchProductSchema } from "@/schemas/product";
+import {
+  patchExistingImagesSchema,
+  patchProductSchema,
+  patchNewImagesSchema,
+} from "@/schemas/product";
 import { getProductById } from "@/services/products.service";
-import { patchProduct } from "@/services/products.service";
-import { ZodError } from "zod";
+
 import { deleteProduct } from "@/services/products.service";
+
+import { PatchProductinfos } from "@/types/product";
+
+import { validateProductImages } from "@/app/validation/product-image";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Authentication
-    // TODO
-
-    // Authorization
-    // TODO
-
     // Get product ID
     const { id } = await params;
 
@@ -64,68 +65,47 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  // 1. TODO :Check authentication
+  let productInfos: PatchProductinfos | null = null;
 
-  // 2. TODO : Check authorization
-
-  // 3. Get product ID from URL
+  // 1 ---- get productID from Param
   const { id } = await params;
 
-  // 4. Get JSON body
-  try {
-    const body = await request.json();
+  // ============================================================
+  // 3. READ FORMDATA
+  // ============================================================
 
-    const cleanData = patchProductSchema.parse(body);
-    // 6. Call service
-    //    → updateProduct(id, cleanData)
-    const serviceResult = await patchProduct(id, cleanData);
+  const formData = await request.formData();
 
-    if (serviceResult === null) {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "NOT_FOUND",
-            message: "Product not found",
-          },
-        },
-        { status: 404 },
-      );
-    }
-    return Response.json(
-      {
-        data: serviceResult,
-        error: null,
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    // if error type then 400
-    if (error instanceof ZodError) {
+  const productRaw = formData.get("product");
+
+  // ============================================================
+  // 4. VALIDATE PRODUCT DATA
+  // ============================================================
+
+  if (productRaw !== null) {
+    let productRawParsed = JSON.parse(productRaw as string);
+
+    const ProductRawZodded = patchProductSchema.safeParse(productRawParsed);
+
+    if (!ProductRawZodded.success) {
       return Response.json(
         {
           data: null,
           error: {
             code: "VALIDATION_ERROR",
             message: "Invalid product data",
-            detail: error.flatten(),
+            details: ProductRawZodded.error.flatten(),
           },
         },
         { status: 400 },
       );
-    } else {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Something went wrong",
-          },
-        },
-        { status: 500 },
-      );
     }
+
+    productInfos = ProductRawZodded.data;
   }
+
+  // MOVE VALIDAITON
+  const normalisedImages = validateProductImages(formData);
 }
 
 export async function DELETE(
