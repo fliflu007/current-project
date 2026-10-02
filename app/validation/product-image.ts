@@ -46,7 +46,13 @@ export function validateProductImages(
   if (typeof existingImagesRaw !== "string") {
     return validationError("Invalid existing image data");
   }
-  const existingImages = JSON.parse(existingImagesRaw);
+  let existingImages;
+
+  try {
+    existingImages = JSON.parse(existingImagesRaw);
+  } catch {
+    return validationError("Invalid existing image data");
+  }
 
   // Validation of existingImages[]
   const resExistingImages = ExistingImagesSchema.safeParse(existingImages);
@@ -55,6 +61,8 @@ export function validateProductImages(
     return validationError("Error Existing Image DataFormat");
   }
   const cleanExistingImages = resExistingImages.data;
+  // --empty still here
+
   ///  End of  ExistingImage Treatement
 
   // newimages[] VALIDATION
@@ -65,7 +73,13 @@ export function validateProductImages(
 
   // BIG Null Condition if that is the case then SEE LATER
 
-  const newImages = JSON.parse(newImagesRaw);
+  let newImages;
+
+  try {
+    newImages = JSON.parse(newImagesRaw);
+  } catch {
+    return validationError("Invalid new image data");
+  }
 
   const resNewImages = patchNewImagesSchema.safeParse(newImages);
 
@@ -102,6 +116,18 @@ export function validateProductImages(
   if (cleanExistingImages.length + cleanNewImages.length > 5) {
     return validationError("maximum of 5 Images");
   }
+
+  // Return null if both ImageData are empty
+  const hasExistingImage = cleanExistingImages.some(
+    (image) => image.publicId !== undefined || image.isPrimary !== undefined,
+  );
+
+  const hasNewImages = cleanNewImages.length > 0;
+
+  if (!hasExistingImage && !hasNewImages) {
+    return null;
+  }
+
   ////////// test ISPrimery true unique
   const primaryCount =
     cleanExistingImages.filter((item) => item.isPrimary === true).length +
