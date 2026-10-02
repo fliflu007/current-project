@@ -12,7 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
-import { EditCardProps } from "@/app/product/[id]/edit/page";
+import { EditCardProps } from "@/app/products/[id]/edit/page";
 import { useState } from "react";
 
 import { MAX_PRODUCT_IMAGES } from "@/lib/constants/products";
