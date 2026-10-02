@@ -43,9 +43,17 @@ export type PatchProductServiceInput = {
   newImages?: NewImageWithFile[];
 };
 
-export type NormalizedImages = {
-  status: "new" | "existing";
-  publicId: string | null;
-  isPrimary: boolean;
-  file: File | null;
-}[];
+export type NormalizedImages = (
+  | {
+      status: "new";
+      publicId: null;
+      isPrimary: boolean;
+      file: File;
+    }
+  | {
+      status: "existing";
+      publicId: string;
+      isPrimary: boolean;
+      file: null;
+    }
+)[];
