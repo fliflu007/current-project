@@ -7,7 +7,7 @@ export default function page() {
       <Navbar isLoggedIn={true} />
 
       <main className="flex flex-1 items-center justify-center overflow-y-auto">
-        <div className="w-[544px] mb-40">
+        <div className="w-136 mb-40">
           <CreateCard></CreateCard>
         </div>
       </main>
