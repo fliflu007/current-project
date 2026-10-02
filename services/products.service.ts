@@ -1,9 +1,12 @@
 import { products } from "@/db/schema";
-import { CreateProductInput, PatchProductInput } from "@/types/product";
+import { CreateProductInput, NormalizedImages } from "@/types/product";
 import { db } from "@/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { profiles } from "@/db/schema";
 import { productImages, inventoryMovements } from "@/db/schema";
+import { PatchProductinfos } from "@/types/product";
+import { ValidationError } from "@/lib/errors/errors";
+import { addImage, deleteImage } from "./images";
 
 export async function getCompanyId(userId: string) {
   const result = await db
@@ -79,26 +82,6 @@ export async function getProductById(id: string) {
   };
 }
 
-
-
-  const result = await db
-    .update(products)
-    .set(dbData)
-    .where(eq(products.id, id))
-    .returning();
-
-  const product = result[0];
-
-  if (!product) {
-    return null;
-  }
-
-  return {
-    ...product,
-    quantity: Number(product.quantity),
-  };
-}
-
 export async function deleteProduct(id: string) {
   const result = await db
     .delete(products)
@@ -124,20 +107,101 @@ export async function getProductImageData(productId: string) {
   return data;
 }
 
-import { PatchProductServiceInput } from "@/types/product";
+export async function updateProductDetails(
+  productId: string,
+  data: PatchProductinfos,
+) {
+  const [updatedProducts] = await db
+    .update(products)
+    .set(data)
+    .where(eq(products.id, productId))
+    .returning();
 
+  if (!updatedProducts) {
+    throw new Error("not able to patch product details");
+  }
 
-export async function patchProduct(input:  PatchProductServiceInput) {
+  return updatedProducts;
+}
 
-  // 1. Find product
+/**
+ * Returns a list of existing images that were erased.
+ * Returns [] when no existing images were erased.
+ */
+export async function updateExistingImages(
+  productId: string,
+  normalisedImages: NormalizedImages,
+) {
+  // 1. Get all current image records from DB
+  const dbImageList = await db
+    .select()
+    .from(productImages)
+    .where(eq(productImages.productId, productId));
+  // OK RETURN WELL
 
-  // 2. If productData exists → update product
+  // check if all existing images inside the normalized image do exist in DB
+  for (const item of normalisedImages) {
+    if (item.status === "existing") {
+      const found = dbImageList.some(
+        (dbimage) => dbimage.publicId === item.publicId,
+      );
+      if (!found) {
+        throw new ValidationError(
+          "The existing image provided was not found in the database",
+        );
+      }
+    }
+  }
+  // check every extraline DB out of my list and make a LIST ready for erase
+  const toEraseList = dbImageList.filter((dbimage) => {
+    return !normalisedImages.some((item) => item.publicId === dbimage.publicId);
+  });
 
-  // 3. If existingImages exists → synchronize existing images
+  /////// ERASE LIST READY
 
-  // 4. If newImages exists → upload + create image records
+  // 7. Delete those images from Cloudinary
+  for (const imagetoerase of toEraseList) {
+    const result = await deleteImage(imagetoerase.publicId);
+    if (result.deleted === false) {
+      throw new Error("Failed to delete image from Cloudinary");
+    }
+  }
 
-  // 5. Return updated product
+  // 8. Delete those image records from DB
+  if (toEraseList.length > 0) {
+    const publicIdsToDelete = toEraseList.map((image) => image.publicId);
 
+    await db
+      .delete(productImages)
+      .where(inArray(productImages.publicId, publicIdsToDelete));
+  }
+  return toEraseList;
+}
 
+export async function updateNewImages(
+  productId: string,
+  normalisedImages: NormalizedImages,
+) {
+  // ADDING CLOUDINARY
+  const addedImages: {
+    url: string;
+    publicId: string;
+  }[] = [];
+
+  for (const newimage of normalisedImages) {
+    if (newimage.status === "new") {
+      const addedImage = await addImage(newimage.file);
+      addedImages.push(addedImage);
+    }
+  }
+  if (addedImages.length > 0) {
+    const result = await db.transaction(async (tx) => {
+      for (const image of addedImages) {
+        await tx.insert(productImages).values({
+          ...image,
+          productId,
+        });
+      }
+    });
+  }
 }
