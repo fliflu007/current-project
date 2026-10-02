@@ -1,4 +1,10 @@
 import z from "zod";
+import { inventoryInputSchema } from "@/schemas/inventory";
+import z from "zod";
+
+export type InventoryInput = z.infer<typeof inventoryInputSchema>;
+
+export type InventoryInput = z.infer<typeof inventoryInputSchema>;
 
 export const inventoryInputSchema = z.object({
   productId: z.string().min(5),

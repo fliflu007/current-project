@@ -1,7 +1,13 @@
-import { productImages } from "@/db/schema";
 import cloudinary from "@/lib/cloudinary/cloudinary";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
+
+type DeleteImageResult = {
+  deleted: boolean;
+};
+
+type CloudinaryUploadResult = {
+  secure_url: string;
+  public_id: string;
+};
 
 /**
  * Deletes an image from Cloudinary.
@@ -45,29 +51,4 @@ export async function addImage(file: File) {
     url: result.secure_url,
     publicId: result.public_id,
   };
-}
-
-export async function setPrimaryImage(imageId: string) {
-  const result = await db
-    .select()
-    .from(productImages)
-    .where(eq(productImages.id, imageId));
-  if (!result.length) {
-    return null;
-  }
-  const imageraw = result[0];
-  const productId = imageraw.productId;
-
-  await db.transaction(async (tx) => {
-    await tx
-      .update(productImages)
-      .set({ isPrimary: false })
-      .where(eq(productImages.productId, productId));
-
-    await tx
-      .update(productImages)
-      .set({ isPrimary: true })
-      .where(eq(productImages.id, imageId));
-  });
-  return { success: true };
 }

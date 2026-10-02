@@ -1,12 +1,12 @@
 import { products } from "@/db/schema";
-import { CreateProductInput, NormalizedImages } from "@/types/product";
+import { CreateProductInput, NormalizedImages } from "@/schemas/product";
 import { db } from "@/db";
 import { eq, inArray } from "drizzle-orm";
 import { profiles } from "@/db/schema";
 import { productImages, inventoryMovements } from "@/db/schema";
-import { PatchProductinfos } from "@/types/product";
+import { PatchProductinfos } from "@/schemas/product";
 import { ValidationError } from "@/lib/errors/errors";
-import { addImage, deleteImage } from "./images";
+import { addImage, deleteImage } from "@/lib/cloudinary/operations";
 
 export async function getCompanyId(userId: string) {
   const result = await db
@@ -204,4 +204,29 @@ export async function updateNewImages(
       }
     });
   }
+}
+
+export async function setPrimaryImage(imageId: string) {
+  const result = await db
+    .select()
+    .from(productImages)
+    .where(eq(productImages.id, imageId));
+  if (!result.length) {
+    return null;
+  }
+  const imageraw = result[0];
+  const productId = imageraw.productId;
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(productImages)
+      .set({ isPrimary: false })
+      .where(eq(productImages.productId, productId));
+
+    await tx
+      .update(productImages)
+      .set({ isPrimary: true })
+      .where(eq(productImages.id, imageId));
+  });
+  return { success: true };
 }

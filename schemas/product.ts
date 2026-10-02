@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { products } from "@/db/schema";
 
 // API create Zod->Type
 export const CreateProductSchema = z.object({
@@ -44,3 +45,55 @@ export const patchNewImagesSchema = z.array(
       },
     ),
 );
+
+// DB OUT
+// type shape Exact DB representation
+export type ProductDB = typeof products.$inferSelect;
+
+// DB insert
+// type shape before DB insertion
+export type ProductInsert = typeof products.$inferInsert;
+
+// POST input
+// Type shape validated by the Zod input schema
+export type CreateProductInput = z.infer<typeof CreateProductSchema>;
+
+// PATCH input
+// Type shape validated by the Zod input schema
+
+// GET service output
+// DB product transformed for application use (quantity: string -> number)
+export type Product = Omit<ProductDB, "quantity"> & {
+  quantity: number;
+};
+
+export type PatchProductinfos = z.infer<typeof patchProductSchema>;
+export type ExistingImageInput = z.infer<typeof patchExistingImagesSchema>;
+export type NewImageInput = z.infer<typeof patchNewImagesSchema>;
+export type NewImageWithFile = NewImageInput[number] & {
+  file: File;
+};
+
+export type NormalizedImages = (
+  | {
+      status: "new";
+      publicId: null;
+      isPrimary: boolean;
+      file: File;
+    }
+  | {
+      status: "existing";
+      publicId: string;
+      isPrimary: boolean;
+      file: null;
+    }
+)[];
+
+// PATCH input
+// Type shape validated by the Zod input schema
+export type PatchProductServiceInput = {
+  productId: string;
+  productData?: PatchProductData;
+  existingImages?: ExistingImageInput;
+  newImages?: NewImageWithFile[];
+};
