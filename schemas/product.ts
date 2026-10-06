@@ -1,6 +1,26 @@
 import { z } from "zod";
 import { products } from "@/db/schema";
 
+// ** CREATE PRODUCT
+
+// FORM
+export const createProductFormSchema = z.object({
+  name: z.string().min(3),
+  description: z.string().max(25).optional(),
+  // Form value is a string → convert to number
+  quantity: z.coerce.number().min(0, "Stock cannot be negative"),
+});
+
+export type CreateProductForm = z.infer<typeof createProductFormSchema>;
+
+export type SelectedImage = {
+  file: File;
+  previewUrl: string;
+  isMain: boolean;
+};
+
+// POSTPRODUCTSCHEMA
+
 // API create Zod->Type
 export const CreateProductSchema = z.object({
   name: z.string().min(3),

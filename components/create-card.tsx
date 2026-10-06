@@ -8,34 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
+import {
+  createProductFormSchema,
+  CreateProductForm,
+  SelectedImage,
+} from "@/schemas/product";
 
-const MAX_IMAGES = 3;
-
-const createProductSchema = z.object({
-  name: z.string().min(3),
-  description: z.string().max(25).optional(),
-  // Form value is a string → convert to number
-  quantity: z.coerce.number().min(0, "Stock cannot be negative"),
-});
-
-type CreateProductForm = z.infer<typeof createProductSchema>;
-
-type SelectedImage = {
-  file: File;
-  previewUrl: string;
-  isMain: boolean;
-};
+import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
 export default function CreateCard() {
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [imageError, setImageError] = useState("");
 
   const form = useForm<CreateProductForm>({
-    resolver: zodResolver(createProductSchema),
+    resolver: zodResolver(createProductFormSchema),
+    mode: "onChange",
     defaultValues: {
       name: "",
       description: "",
@@ -45,7 +35,7 @@ export default function CreateCard() {
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
-    const remainingSlots = MAX_IMAGES - images.length;
+    const remainingSlots = MAX_PRODUCT_IMAGES - images.length;
     if (remainingSlots <= 0) {
       return;
     }
@@ -190,8 +180,7 @@ export default function CreateCard() {
                   id="quantity"
                   min={0}
                   type="number"
-                  step="any"
-                  placeholder="0"
+                  step="1"
                   {...form.register("quantity")}
                 />
                 {form.formState.errors.quantity && (
@@ -211,7 +200,7 @@ export default function CreateCard() {
                   multiple
                   onChange={handleImageChange}
                 />
-                <p>{MAX_IMAGES} images max..</p>
+                <p>{MAX_PRODUCT_IMAGES} images max..</p>
                 {imageError && (
                   <p className="text-sm text-destructive">{imageError}</p>
                 )}
@@ -219,7 +208,6 @@ export default function CreateCard() {
 
               <Field>
                 <div className="flex flex-col gap-4">
-                  {/*<div className="h-20 w-20 bg-green-200">image holder</div> */}
                   {images.map((image) => (
                     <div
                       key={image.previewUrl}
