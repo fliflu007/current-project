@@ -3,8 +3,6 @@ import { ALLOWED_IMAGE_TYPES } from "@/constants/products";
 import { ImageItemType } from "../page";
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
-import { CreateDataForm } from "../page";
-
 /**
  * Validates a list of image files.
  *
@@ -45,27 +43,4 @@ export function normalizeImageInput(files: File[], hasExistingImage: boolean) {
 
 export function addImages(prev: ImageItemType[], newImages: ImageItemType[]) {
   return [...prev, ...newImages].slice(0, MAX_PRODUCT_IMAGES);
-}
-
-export function prepareFormData(data: CreateDataForm, images: ImageItemType[]) {
-  // create Formdata
-  const formdata = new FormData();
-  // set key    ( date: json({datahere},file1:file,file2:...))
-  formdata.append("data", JSON.stringify(data));
-
-  const imageList = images.map((image, index) => {
-    return {
-      key: `key${index}`,
-      isMain: image.isMain,
-    };
-  });
-
-  formdata.append("imagesdata", JSON.stringify(imageList));
-
-  // add the key and fill loop
-  images.forEach((image, index) => {
-    formdata.append(`key${index}`, image.file);
-  });
-
-  return formdata;
 }

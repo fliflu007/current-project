@@ -1,16 +1,183 @@
-import CreateCard from "@/components/create-card";
-import Navbar from "@/components/navbar";
+"use client";
 
-export default function page() {
+import z from "zod";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+import { MAX_PRODUCT_IMAGES } from "@/constants/products";
+
+import ImageForm from "./image-component/imageselector";
+import ImageItem2 from "./image-component/image-item2";
+
+import { prepareFormData } from "./prepare-form-data";
+
+const createDataFormSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
+  description: z.string().max(50, "Maximum 50 characters").optional(),
+  quantity: z.coerce.number().min(0),
+});
+export type CreateDataForm = z.infer<typeof createDataFormSchema>;
+
+// IMAGE STATE FORMAT
+// Compatible with ImageInput and ImageItem components
+export type ImageItemType = {
+  file: File;
+  previewUrl: string;
+  isMain: boolean;
+};
+
+export default function Page() {
+  const form = useForm<CreateDataForm>({
+    resolver: zodResolver(createDataFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: "",
+      description: "",
+      quantity: 0,
+    },
+  });
+
+  const [images, setImages] = useState<ImageItemType[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  const removeImage = (previewUrl: string) => {
+    if (images.length > 1) {
+      setImages((current) =>
+        current.filter((image) => image.previewUrl !== previewUrl),
+      );
+    }
+  };
+
+  const setMainImage = (previewUrl: string) => {
+    setImages((current) =>
+      current.map((image) => ({
+        ...image,
+        isMain: image.previewUrl === previewUrl,
+      })),
+    );
+  };
+
+  const onSubmit = async (data: CreateDataForm) => {
+    if (images.length === 0) {
+      setImageError("Requires at least one image...");
+      return;
+    }
+
+    const payload = prepareFormData(data, images);
+
+    const res = await fetch("/api/product/create", {
+      method: "POST",
+      body: payload,
+    });
+
+    console.log(res);
+  };
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar isLoggedIn={true} />
+    <div>
+      <div className="flex flex-row justify-center">
+        <Card className="w-full shadow-xl max-w-2xl ">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">CREATE PRODUCT</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {apiError && (
+              <Alert variant="destructive">
+                <AlertTitle>Unable to create product</AlertTitle>
+                <AlertDescription>{apiError}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="name">Product name</FieldLabel>
 
-      <main className="flex flex-1 items-center justify-center overflow-y-auto">
-        <div className="w-136 mb-40">
-          <CreateCard></CreateCard>
-        </div>
-      </main>
+                  <Input
+                    id="name"
+                    autoComplete="off"
+                    placeholder="Product name"
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="detail">Details</FieldLabel>
+
+                  <Textarea
+                    id="description"
+                    placeholder="Product description"
+                    {...form.register("description")}
+                  />
+                </Field>
+                {form.formState.errors.description && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.description.message}
+                  </p>
+                )}
+                <Field>
+                  <FieldLabel htmlFor="quantity">Initial Stock</FieldLabel>
+
+                  <Input
+                    id="quantity"
+                    min={0}
+                    type="number"
+                    step="1"
+                    {...form.register("quantity")}
+                  />
+                  {form.formState.errors.quantity && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.quantity.message}
+                    </p>
+                  )}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="image">Product image</FieldLabel>
+                  <ImageForm
+                    images={images}
+                    setImages={setImages}
+                    setImageError={setImageError}
+                  ></ImageForm>
+
+                  <p>{MAX_PRODUCT_IMAGES} images max..</p>
+                  {imageError && (
+                    <p className="text-sm text-destructive">{imageError}</p>
+                  )}
+                </Field>
+
+                <Field>
+                  <div className="flex flex-col gap-4">
+                    {images.map((image) => (
+                      <ImageItem2
+                        key={image.previewUrl}
+                        image={image}
+                        removeImage={removeImage}
+                        setMainImage={setMainImage}
+                      ></ImageItem2>
+                    ))}
+                  </div>
+                </Field>
+
+                <Button className="py-5 font-bold" type="submit">
+                  Create Product
+                </Button>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
