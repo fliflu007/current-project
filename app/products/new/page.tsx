@@ -20,6 +20,8 @@ import ImageItem2 from "./image-component/image-item2";
 
 import { prepareFormData } from "./prepare-form-data";
 
+import { toast } from "sonner";
+
 const createDataFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().max(50, "Maximum 50 characters").optional(),
@@ -74,13 +76,24 @@ export default function Page() {
     }
 
     const payload = prepareFormData(data, images);
+    for (const [key, value] of payload.entries()) {
+      console.log(key, value);
+    }
 
     const res = await fetch("/api/product/create", {
       method: "POST",
       body: payload,
     });
 
-    console.log(res);
+    console.log("STATUS:", res.status);
+
+    if (!res.ok) {
+      const body = await res.json();
+
+      toast.error(body.error?.message ?? "Something went wrong");
+
+      return;
+    }
   };
   return (
     <div>

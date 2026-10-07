@@ -6,7 +6,9 @@ import { profiles } from "@/db/schema";
 import { productImages, inventoryMovements } from "@/db/schema";
 import { PatchProductinfos } from "@/schemas/product";
 import { ValidationError } from "@/lib/errors/errors";
-import { addImage, deleteImage } from "@/lib/cloudinary/operations";
+import { deleteImage } from "@/lib/cloudinary/operations";
+import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
+import { ConflictError } from "@/lib/errors/errors";
 
 export async function getCompanyId(userId: string) {
   const result = await db
@@ -19,6 +21,39 @@ export async function getCompanyId(userId: string) {
   }
 
   return result[0].companyId;
+}
+
+/// API CREATE
+import { CreateProductData } from "@/schemas/product";
+
+export async function insertProductDb(
+  productData: CreateProductData,
+  companyId: string,
+) {
+  try {
+    const [product] = await db
+      .insert(products)
+      .values({
+        companyId,
+        name: productData.name,
+        description: productData.description,
+        quantity: productData.quantity.toString(),
+      })
+      .returning();
+
+    return product;
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      throw new ConflictError("A product with this name already exists.");
+    }
+
+    throw error;
+  }
 }
 
 export async function createProduct(
@@ -190,7 +225,7 @@ export async function updateNewImages(
 
   for (const newimage of normalisedImages) {
     if (newimage.status === "new") {
-      const addedImage = await addImage(newimage.file);
+      const addedImage = await uploadImageToCloudinary(newimage.file);
       addedImages.push(addedImage);
     }
   }

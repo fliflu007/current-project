@@ -61,7 +61,11 @@ export const products = pgTable(
 
     quantity: numeric("quantity").default("0").notNull(),
   },
-  (table) => [index("products_company_id_idx").on(table.companyId)],
+  (table) => [
+    index("products_company_id_idx").on(table.companyId),
+
+    uniqueIndex("products_company_name_unique").on(table.companyId, table.name),
+  ],
 );
 
 export const productImages = pgTable(

@@ -20,7 +20,7 @@ export async function deleteImage(
   return { deleted: result.result === "ok" };
 }
 
-export async function addImage(file: File) {
+export async function uploadImageToCloudinary(file: File) {
   // Convert File → ArrayBuffer to access the file's raw bytes
   const arrayBuffer = await file.arrayBuffer();
   // Convert ArrayBuffer → Node.js Buffer for Cloudinary upload

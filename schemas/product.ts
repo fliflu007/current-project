@@ -4,14 +4,14 @@ import { products } from "@/db/schema";
 // ** CREATE PRODUCT
 
 // FORM
-export const createProductFormSchema = z.object({
-  name: z.string().min(3),
-  description: z.string().max(25).optional(),
+export const createProductDataSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
+  description: z.string().max(50, "Maximum 50 characters").optional(),
   // Form value is a string → convert to number
   quantity: z.coerce.number().min(0, "Stock cannot be negative"),
 });
 
-export type CreateProductForm = z.infer<typeof createProductFormSchema>;
+export type CreateProductData = z.infer<typeof createProductDataSchema>;
 
 export type SelectedImage = {
   file: File;
@@ -19,7 +19,13 @@ export type SelectedImage = {
   isMain: boolean;
 };
 
-// POSTPRODUCTSCHEMA
+// API CREATE :
+export const imageDataSchema = z.array(
+  z.object({
+    key: z.string(),
+    isMain: z.boolean(),
+  }),
+);
 
 // API create Zod->Type
 export const CreateProductSchema = z.object({
@@ -37,6 +43,7 @@ export const CreateProductSchema = z.object({
 // .partial() makes all fields optional for PATCH
 // export const patchProductSchema = CreateProductSchema.partial();
 
+//////////   PATCH
 const editProductSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   description: z.string(),

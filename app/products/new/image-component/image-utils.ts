@@ -41,6 +41,9 @@ export function normalizeImageInput(files: File[], hasExistingImage: boolean) {
   return filenormalised;
 }
 
-export function addImages(prev: ImageItemType[], newImages: ImageItemType[]) {
+export function addImagesWithLimit(
+  prev: ImageItemType[],
+  newImages: ImageItemType[],
+) {
   return [...prev, ...newImages].slice(0, MAX_PRODUCT_IMAGES);
 }

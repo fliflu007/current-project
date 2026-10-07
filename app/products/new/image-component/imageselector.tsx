@@ -2,7 +2,7 @@ import React from "react";
 import { validateImageInput } from "@/app/products/new/image-component/image-utils";
 import { normalizeImageInput } from "@/app/products/new/image-component/image-utils";
 import { ImageItemType } from "../page";
-import { addImages } from "@/app/products/new/image-component/image-utils";
+import { addImagesWithLimit } from "@/app/products/new/image-component/image-utils";
 import { Input } from "@/components/ui/input";
 
 export default function ImageSelector({
@@ -35,12 +35,15 @@ export default function ImageSelector({
     setImageError(null);
 
     const hasExistingImage = Boolean(images && images.length > 0);
+
+    // Normalize files into image state format
+    // Create previewUrl and set isMain
     const normalizedImages = normalizeImageInput(
       validatedFiles.files,
       hasExistingImage,
     );
-    // add imagenormaled to imageSelector
-    setImages((prev) => addImages(prev, normalizedImages));
+
+    setImages((prev) => addImagesWithLimit(prev, normalizedImages));
   };
 
   return (
