@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "products_company_name_unique" ON "products" USING btree ("company_id","name");

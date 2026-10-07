@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "test_column" text;

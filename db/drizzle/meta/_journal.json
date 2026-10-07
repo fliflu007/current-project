@@ -22,6 +22,27 @@
       "when": 1788506464621,
       "tag": "0002_lazy_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791363144508,
+      "tag": "0003_bumpy_tag",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791364637828,
+      "tag": "0004_tense_darkhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791367828663,
+      "tag": "0005_complex_betty_brant",
+      "breakpoints": true
     }
   ]
 }
