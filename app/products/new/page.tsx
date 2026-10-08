@@ -11,7 +11,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
@@ -49,15 +48,29 @@ export default function Page() {
   });
 
   const [images, setImages] = useState<ImageItemType[]>([]);
-  const [apiError, setApiError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
   const removeImage = (previewUrl: string) => {
-    if (images.length > 1) {
-      setImages((current) =>
-        current.filter((image) => image.previewUrl !== previewUrl),
-      );
+    if (images.length <= 1) {
+      return;
     }
+
+    const imageToRemove = images.find(
+      (image) => image.previewUrl === previewUrl,
+    );
+
+    const remainingImages = images.filter(
+      (image) => image.previewUrl !== previewUrl,
+    );
+
+    if (imageToRemove?.isMain) {
+      remainingImages[0] = {
+        ...remainingImages[0],
+        isMain: true,
+      };
+    }
+
+    setImages(remainingImages);
   };
 
   const setMainImage = (previewUrl: string) => {
@@ -94,102 +107,106 @@ export default function Page() {
 
       return;
     }
+
+    toast.success("Product created successfully");
+
+    form.reset();
+    setImages([]);
+    setImageError(null);
   };
   return (
     <div>
-      <div className="flex flex-row justify-center">
-        <Card className="w-full shadow-xl max-w-2xl ">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">CREATE PRODUCT</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {apiError && (
-              <Alert variant="destructive">
-                <AlertTitle>Unable to create product</AlertTitle>
-                <AlertDescription>{apiError}</AlertDescription>
-              </Alert>
-            )}
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="name">Product name</FieldLabel>
+      <div className="flex flex-1 my-10 justify-center">
+        <div className="w-136 overflow-visible">
+          <Card className="w-full shadow-xl max-w-2xl ">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">
+                CREATE PRODUCT
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="name">Product name</FieldLabel>
 
-                  <Input
-                    id="name"
-                    autoComplete="off"
-                    placeholder="Product name"
-                    {...form.register("name")}
-                  />
-                  {form.formState.errors.name && (
+                    <Input
+                      id="name"
+                      autoComplete="off"
+                      placeholder="Product name"
+                      {...form.register("name")}
+                    />
+                    {form.formState.errors.name && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.name.message}
+                      </p>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="detail">Details</FieldLabel>
+
+                    <Textarea
+                      id="description"
+                      placeholder="Product description"
+                      {...form.register("description")}
+                    />
+                  </Field>
+                  {form.formState.errors.description && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.name.message}
+                      {form.formState.errors.description.message}
                     </p>
                   )}
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="detail">Details</FieldLabel>
+                  <Field>
+                    <FieldLabel htmlFor="quantity">Initial Stock</FieldLabel>
 
-                  <Textarea
-                    id="description"
-                    placeholder="Product description"
-                    {...form.register("description")}
-                  />
-                </Field>
-                {form.formState.errors.description && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.description.message}
-                  </p>
-                )}
-                <Field>
-                  <FieldLabel htmlFor="quantity">Initial Stock</FieldLabel>
+                    <Input
+                      id="quantity"
+                      min={0}
+                      type="number"
+                      step="1"
+                      {...form.register("quantity")}
+                    />
+                    {form.formState.errors.quantity && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.quantity.message}
+                      </p>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="image">Product image</FieldLabel>
+                    <ImageForm
+                      images={images}
+                      setImages={setImages}
+                      setImageError={setImageError}
+                    ></ImageForm>
 
-                  <Input
-                    id="quantity"
-                    min={0}
-                    type="number"
-                    step="1"
-                    {...form.register("quantity")}
-                  />
-                  {form.formState.errors.quantity && (
-                    <p className="text-sm text-destructive">
-                      {form.formState.errors.quantity.message}
-                    </p>
-                  )}
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="image">Product image</FieldLabel>
-                  <ImageForm
-                    images={images}
-                    setImages={setImages}
-                    setImageError={setImageError}
-                  ></ImageForm>
+                    <p>{MAX_PRODUCT_IMAGES} images max..</p>
+                    {imageError && (
+                      <p className="text-sm text-destructive">{imageError}</p>
+                    )}
+                  </Field>
 
-                  <p>{MAX_PRODUCT_IMAGES} images max..</p>
-                  {imageError && (
-                    <p className="text-sm text-destructive">{imageError}</p>
-                  )}
-                </Field>
+                  <Field>
+                    <div className="flex flex-col gap-4">
+                      {images.map((image) => (
+                        <ImageItem2
+                          key={image.previewUrl}
+                          image={image}
+                          removeImage={removeImage}
+                          setMainImage={setMainImage}
+                        ></ImageItem2>
+                      ))}
+                    </div>
+                  </Field>
 
-                <Field>
-                  <div className="flex flex-col gap-4">
-                    {images.map((image) => (
-                      <ImageItem2
-                        key={image.previewUrl}
-                        image={image}
-                        removeImage={removeImage}
-                        setMainImage={setMainImage}
-                      ></ImageItem2>
-                    ))}
-                  </div>
-                </Field>
-
-                <Button className="py-5 font-bold" type="submit">
-                  Create Product
-                </Button>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
+                  <Button className="py-5 font-bold" type="submit">
+                    Create Product
+                  </Button>
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
