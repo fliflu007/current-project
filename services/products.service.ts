@@ -31,6 +31,7 @@ export async function insertProductDb(
   companyId: string,
 ) {
   try {
+    console.log("try to injectio data inDB");
     const [product] = await db
       .insert(products)
       .values({
@@ -40,15 +41,21 @@ export async function insertProductDb(
         quantity: productData.quantity.toString(),
       })
       .returning();
+    console.log("injecting happened no ERROR");
 
     return product;
   } catch (error) {
+    console.log("Error as productdata dB insertion");
     if (
       typeof error === "object" &&
       error !== null &&
-      "code" in error &&
-      error.code === "23505"
+      "cause" in error &&
+      error.cause &&
+      typeof error.cause === "object" &&
+      "code" in error.cause &&
+      error.cause.code === "23505"
     ) {
+      console.log("throwinr ConflictError");
       throw new ConflictError("A product with this name already exists.");
     }
 
