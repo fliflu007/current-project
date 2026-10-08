@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
-import ImageForm from "./image-component/imageselector";
+import ImageSelector from "./image-component/imageselector";
 import ImageItem2 from "./image-component/image-item2";
 
 import { prepareFormData } from "./prepare-form-data";
@@ -174,11 +174,11 @@ export default function Page() {
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="image">Product image</FieldLabel>
-                    <ImageForm
+                    <ImageSelector
                       images={images}
                       setImages={setImages}
                       setImageError={setImageError}
-                    ></ImageForm>
+                    ></ImageSelector>
 
                     <p>{MAX_PRODUCT_IMAGES} images max..</p>
                     {imageError && (
