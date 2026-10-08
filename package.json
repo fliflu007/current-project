@@ -5,7 +5,9 @@
     "dev": "next dev --turbopack",
     "start": "next start",
     "mock-api": "json-server --watch db.json --port 3001",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -43,6 +45,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "22.10.7",
