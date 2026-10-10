@@ -1,37 +1,34 @@
 import EditCard from "@/components/edit-card";
-import { getProductById } from "@/services/products.service";
-import z from "zod";
-import { getProductImageData } from "@/services/products.service";
 
 import Navbar from "@/components/navbar";
-import { productImages } from "@/db/schema";
-import { Product } from "@/types/product";
 
-export type EditCardProps = {
-  product: Product;
-  imagelist: (typeof productImages.$inferSelect)[];
-};
+import { notFound } from "next/navigation";
+
+import { ProductByIdResponse } from "./patch-types-schema";
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // fetch all data and show in console.
   const { id } = await params;
 
-  const uuidschema = z.string().uuid();
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/product/${id}`,
+  );
 
-  const result = uuidschema.safeParse(id);
-  if (!result.success) {
-    return <h1>Invalid product ID</h1>;
-  }
-  const product = await getProductById(result.data);
-
-  if (!product) {
-    return <h1>No product found</h1>;
+  if (response.status === 404) {
+    notFound();
   }
 
-  const imagelist = await getProductImageData(result.data);
+  if (!response.ok) {
+    throw new Error("Failed to fetch product");
+  }
+
+  const result: { data: ProductByIdResponse } = await response.json();
+  const product = result.data;
+  console.log("PRODUCT", product);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -40,7 +37,7 @@ export default async function Page({
 
         <main className="flex flex-1 my-10 justify-center">
           <div className="w-136 overflow-visible">
-            <EditCard product={product} imagelist={imagelist} />
+            <EditCard product={product} />
           </div>
         </main>
       </div>
