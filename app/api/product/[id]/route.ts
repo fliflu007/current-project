@@ -1,18 +1,23 @@
-import { patchProductSchema } from "@/schemas/product";
+import z from "zod";
+
+import { ValidationError } from "@/lib/errors/errors";
+
 import {
   getProductById,
+  getProductImageData,
   updateExistingImages,
   updateNewImages,
   updateProductDetails,
 } from "@/services/products.service";
+import {
+  newImagesSchema,
+  patchProductDataSchema,
+} from "@/app/products/[id]/edit/patch-types-schema";
+export const patchProductDataApiSchema = patchProductDataSchema.partial();
+
+import { existingImagesSchema } from "@/app/products/[id]/edit/patch-types-schema";
 
 import { deleteProduct } from "@/services/products.service";
-
-import { PatchProductinfos } from "@/types/product";
-
-import { validateProductImages } from "@/app/validation/product-image";
-import { validationError } from "@/lib/api/response";
-import { ValidationError } from "@/lib/errors/errors";
 
 export async function GET(
   request: Request,
@@ -23,10 +28,10 @@ export async function GET(
     const { id } = await params;
 
     // Call service
-    const data = await getProductById(id);
+    const productData = await getProductById(id);
 
     // Product not found
-    if (data === null) {
+    if (productData === null) {
       return Response.json(
         {
           data: null,
@@ -39,10 +44,16 @@ export async function GET(
       );
     }
 
+    // get all image Data
+    const productImages = await getProductImageData(id);
+    console.log("images", productImages);
+
+    const product = { ...productData, images: productImages };
+
     // Product found
     return Response.json(
       {
-        data,
+        data: product,
         error: null,
       },
       { status: 200 },
@@ -59,107 +70,6 @@ export async function GET(
       },
       { status: 500 },
     );
-  }
-}
-
-///// PATCH function
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    let productInfos: PatchProductinfos | null = null;
-
-    // 1 ---- get productID from Param
-    const { id } = await params;
-
-    // ============================================================
-    // 3. READ FORMDATA
-    // ============================================================
-
-    const formData = await request.formData();
-
-    const productRaw = formData.get("product");
-
-    // ============================================================
-    // 4. VALIDATE PRODUCT DATA
-    // ============================================================
-
-    if (productRaw !== null) {
-      let productRawParsed = JSON.parse(productRaw as string);
-
-      const ProductRawZodded = patchProductSchema.safeParse(productRawParsed);
-
-      if (!ProductRawZodded.success) {
-        return Response.json(
-          {
-            data: null,
-            error: {
-              code: "VALIDATION_ERROR",
-              message: "Invalid product data",
-              details: ProductRawZodded.error.flatten(),
-            },
-          },
-          { status: 400 },
-        );
-      }
-
-      productInfos = ProductRawZodded.data;
-    }
-
-    // MOVE VALIDAITON
-    const normalisedImages = validateProductImages(formData);
-
-    // Error return from Validation
-    if (normalisedImages instanceof Response) {
-      return normalisedImages;
-    }
-
-    // 3 Type : UPDATE DATAdetail only / PROCESS Image Exist  / PORCESS IMAGE ARE NEW / FINAL UPDATE isMain
-
-    // A UPDATE PRODUCT DETAIL
-    if (productInfos) {
-      await updateProductDetails(id, productInfos);
-    }
-
-    /// B PROCESS ExISTING IMAGES
-    if (normalisedImages) {
-      // return erased List[]
-      await updateExistingImages(id, normalisedImages);
-    }
-    /// C -Process NEw Images
-    if (normalisedImages) {
-      await updateNewImages(id, normalisedImages);
-    }
-    return Response.json({
-      data: { success: true },
-      error: null,
-    });
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: error.message,
-          },
-        },
-        { status: 400 },
-      );
-    } else {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Internal server error",
-          },
-        },
-        { status: 500 },
-      );
-    }
   }
 }
 
@@ -188,6 +98,123 @@ export async function DELETE(
         error: {
           code: "INTERNAL_SERVER_ERROR",
           message: "something went wrong",
+        },
+      },
+      { status: 500 },
+    );
+  }
+}
+
+import { NextRequest, NextResponse } from "next/server";
+import { validationError } from "@/lib/api/response";
+import { validateImageFile } from "@/app/validation/product-image";
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    const formData = await request.formData();
+
+    const dataRaw = formData.get("data");
+    const existingImagesRaw = formData.get("existingImages");
+    const newImagesRaw = formData.get("newImages");
+
+    if (
+      typeof dataRaw !== "string" ||
+      typeof existingImagesRaw !== "string" ||
+      typeof newImagesRaw !== "string"
+    ) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Missing or invalid form data",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    let data;
+    let existingImages;
+    let newImages;
+
+    try {
+      data = JSON.parse(dataRaw);
+      existingImages = JSON.parse(existingImagesRaw);
+      newImages = JSON.parse(newImagesRaw);
+    } catch {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid JSON in form data",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // Basic receiver only: validate the data with Zod next.
+    // BASIC VALIDATION :
+    const validatedData = patchProductDataApiSchema.parse(data);
+    const validatedExistingImages = existingImagesSchema.parse(existingImages);
+    const validatedNewImages = newImagesSchema.parse(newImages);
+
+    // VAlidation Key->image corresponding. + File Format
+    for (const image of validatedNewImages) {
+      const file = formData.get(image.key);
+
+      if (!(file instanceof File)) {
+        return validationError(`Missing image file for key: ${image.key}`);
+      }
+
+      validateImageFile(file);
+    }
+
+    /// FINAL VALIDATION :
+
+    //     Unexpected files: reject uploaded file parts that aren't referenced by validatedNewImages.
+
+    // Image business rules: enforce your maximum image count and primary-image rules.
+
+    // Existing image ownership: verify that each publicId really belongs to this product before changing or
+
+    //Validation File
+
+    // Then authorize the user, validate image files,
+
+    // and call your product update service.
+
+    return NextResponse.json({
+      data: {
+        id,
+        received: true,
+        product: data,
+        existingImages,
+        newImages,
+      },
+      error: null,
+    });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return validationError(error.message);
+    }
+    if (error instanceof z.ZodError) {
+      return validationError("Invalid existing image data");
+    }
+
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to process request",
         },
       },
       { status: 500 },
