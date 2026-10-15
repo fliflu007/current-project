@@ -89,9 +89,6 @@ export default function Page() {
     }
 
     const payload = prepareFormData(data, images);
-    for (const [key, value] of payload.entries()) {
-      console.log(key, value);
-    }
 
     const res = await fetch("/api/product/create", {
       method: "POST",

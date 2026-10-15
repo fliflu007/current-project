@@ -50,6 +50,17 @@ export default function EditCard({
     //
 
     console.log("patching... ");
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(key, {
+          name: value.name,
+          type: value.type,
+          size: value.size,
+        });
+      } else {
+        console.log(key, value);
+      }
+    }
     await fetch(`/api/product/${product.id}/edit`, {
       method: "PATCH",
       body: formData,

@@ -1,4 +1,3 @@
-import { boolean } from "drizzle-orm/gel-core";
 import z from "zod";
 
 ////////////////// API OUT FOR PATCH//////////////////////////////
@@ -39,17 +38,27 @@ export const patchProductDataSchema = z.object({
 
 export type PatchProductData = z.infer<typeof patchProductDataSchema>;
 
+export const patchProductDataApiSchema = patchProductDataSchema.partial();
+
+export type PatchProductDataApi = z.infer<typeof patchProductDataApiSchema>;
+
 // BACKEND  PATCH DATA IN
 
-export const existingImageSchema = z.object({
+export const existingImageInputSchema = z.object({
   publicId: z.string().min(3),
   isPrimary: z.boolean(),
 });
 
-export const existingImagesSchema = z.array(existingImageSchema);
+export type ExistingImageInput = z.infer<typeof existingImageInputSchema>;
+
+export const existingImagesSchema = z.array(existingImageInputSchema);
 
 export const newImageSchema = z.object({
-  key: z.string(),
+  key: z.string().regex(/^image_\d+$/, {
+    message: "Key must follow the format image_0, image_1, etc.",
+  }),
   isPrimary: z.boolean(),
 });
 export const newImagesSchema = z.array(newImageSchema);
+
+export type NewImagesType = z.infer<typeof newImagesSchema>;

@@ -18,7 +18,7 @@ export default function ProductViewer({
 
   return (
     <div>
-      <Tabs className="w-[400px] block md:hidden">
+      <Tabs className="w-100 block md:hidden">
         <TabsList>
           <TabsTrigger
             onClick={() => {

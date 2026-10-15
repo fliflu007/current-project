@@ -1,24 +1,23 @@
 import z from "zod";
-
+import { NextRequest, NextResponse } from "next/server";
 import { ValidationError } from "@/lib/errors/errors";
+import { validatePatchRequest } from "./patch-validation";
 
 import {
+  deleteImageDB,
   getProductById,
   getProductImageData,
-  updateExistingImages,
-  updateNewImages,
-  updateProductDetails,
+  setPrimaryImageByPublicID,
 } from "@/services/products.service";
-import {
-  newImagesSchema,
-  patchProductDataSchema,
-} from "@/app/products/[id]/edit/patch-types-schema";
-export const patchProductDataApiSchema = patchProductDataSchema.partial();
-
-import { existingImagesSchema } from "@/app/products/[id]/edit/patch-types-schema";
+import { addImagesToDB } from "@/services/products.service";
 
 import { deleteProduct } from "@/services/products.service";
+import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
+import { deleteImage } from "@/lib/cloudinary/operations";
 
+import { updateProductDetails } from "@/services/products.service";
+
+import { getImagesToRemove } from "./helper";
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -105,119 +104,123 @@ export async function DELETE(
   }
 }
 
-import { NextRequest, NextResponse } from "next/server";
-import { validationError } from "@/lib/api/response";
-import { validateImageFile } from "@/app/validation/product-image";
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // auth
   try {
     const { id } = await params;
 
-    const formData = await request.formData();
+    const formdata = await request.formData();
 
-    const dataRaw = formData.get("data");
-    const existingImagesRaw = formData.get("existingImages");
-    const newImagesRaw = formData.get("newImages");
+    const cleanRequest = await validatePatchRequest(formdata, id);
 
-    if (
-      typeof dataRaw !== "string" ||
-      typeof existingImagesRaw !== "string" ||
-      typeof newImagesRaw !== "string"
-    ) {
-      return NextResponse.json(
-        {
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Missing or invalid form data",
-          },
-        },
-        { status: 400 },
-      );
+    /// OPERATION //
+    const imagesInDB = await getProductImageData(id);
+
+    // Undefined here is not filed AT first So no Operation on them
+    let imagesToRemove: {
+      id: string;
+      productId: string;
+      url: string;
+      publicId: string;
+      isPrimary: boolean;
+      createdAt: Date;
+    }[] = [];
+
+    const existingImages = cleanRequest.existingImages;
+    if (existingImages) {
+      imagesToRemove = getImagesToRemove(imagesInDB, existingImages);
     }
 
-    let data;
-    let existingImages;
-    let newImages;
+    const imagesToAdd = cleanRequest.newImagesWFiles;
 
-    try {
-      data = JSON.parse(dataRaw);
-      existingImages = JSON.parse(existingImagesRaw);
-      newImages = JSON.parse(newImagesRaw);
-    } catch {
-      return NextResponse.json(
-        {
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid JSON in form data",
-          },
-        },
-        { status: 400 },
-      );
+    // 2. Upload new images to Cloudinary
+    const newImageCloudData: {
+      url: string;
+      publicId: string;
+      isPrimary: boolean;
+    }[] = [];
+    for (const image of imagesToAdd) {
+      const result = await uploadImageToCloudinary(image.file);
+      newImageCloudData.push({ ...result, isPrimary: image.isPrimary });
+    }
+    /////////////////////////////////////
+    /////// 3. DATABASE TRANSACTION /////
+    /////////////////////////////////////
+
+    /////  A → UPDATE DATA
+    if (cleanRequest.data && Object.keys(cleanRequest.data).length > 0) {
+      await updateProductDetails(id, cleanRequest.data);
+    }
+    // ADD NEW IMAGE TO DB
+    await addImagesToDB(
+      newImageCloudData.map((image) => ({
+        ...image,
+        isPrimary: false,
+      })),
+      id,
+    );
+    // SET PRIMARY ////////
+    // find it:
+    const existingPrimary = cleanRequest.existingImages?.find(
+      (image) => image.isPrimary,
+    );
+    // Find the selected primary image among newly uploaded images
+    const newPrimary = newImageCloudData.find((image) => image.isPrimary);
+    // Set it
+    if (existingPrimary) {
+      await setPrimaryImageByPublicID(existingPrimary.publicId, id);
+    } else if (newPrimary) {
+      await setPrimaryImageByPublicID(newPrimary?.publicId, id);
     }
 
-    // Basic receiver only: validate the data with Zod next.
-    // BASIC VALIDATION :
-    const validatedData = patchProductDataApiSchema.parse(data);
-    const validatedExistingImages = existingImagesSchema.parse(existingImages);
-    const validatedNewImages = newImagesSchema.parse(newImages);
-
-    // VAlidation Key->image corresponding. + File Format
-    for (const image of validatedNewImages) {
-      const file = formData.get(image.key);
-
-      if (!(file instanceof File)) {
-        return validationError(`Missing image file for key: ${image.key}`);
+    // C remove unwanted existing image records DB
+    if (imagesToRemove.length > 0) {
+      for (const currentImage of imagesToRemove) {
+        await deleteImageDB(currentImage.publicId);
       }
-
-      validateImageFile(file);
     }
 
-    /// FINAL VALIDATION :
+    ///////////////////////////////////////
+    ///////////////////////////////////////
+    ///////////////////////////////////////
 
-    //     Unexpected files: reject uploaded file parts that aren't referenced by validatedNewImages.
+    // 4. Remove old images from Cloudinary
+    for (const images of imagesToRemove) {
+      await deleteImage(images.publicId);
+    }
 
-    // Image business rules: enforce your maximum image count and primary-image rules.
-
-    // Existing image ownership: verify that each publicId really belongs to this product before changing or
-
-    //Validation File
-
-    // Then authorize the user, validate image files,
-
-    // and call your product update service.
-
-    return NextResponse.json({
-      data: {
-        id,
-        received: true,
-        product: data,
-        existingImages,
-        newImages,
-      },
-      error: null,
-    });
+    // Temporary response: validation passed, no update performed.
+    return NextResponse.json("OK");
   } catch (error) {
     if (error instanceof ValidationError) {
-      return validationError(error.message);
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: error.message ?? "Validation Error",
+          },
+        },
+        { status: 400 },
+      );
     }
     if (error instanceof z.ZodError) {
-      return validationError("Invalid existing image data");
-    }
+      const message = error.issues[0]?.message;
 
-    return NextResponse.json(
-      {
-        data: null,
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to process request",
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: message ?? "Invalid input",
+          },
         },
-      },
-      { status: 500 },
-    );
+        { status: 400 },
+      );
+    }
+    throw error;
   }
 }
