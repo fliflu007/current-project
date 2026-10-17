@@ -10,6 +10,7 @@ import { ProductImage } from "./patch-types-schema";
 import type { Dispatch, SetStateAction } from "react";
 
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
+import { toast } from "sonner";
 
 export default function ImageSelector({
   setImages,
@@ -21,15 +22,15 @@ export default function ImageSelector({
   const [imageError, setImageError] = useState<null | string>(null);
 
   function onImageChange(event: React.ChangeEvent<HTMLInputElement>) {
-    // implement UI input logic
-
-    // implement the isPrimary logic
-
-    // return undefined if files do not exist
     setImageError(null);
+
     const selectedFiles = Array.from(event.target.files ?? []);
 
     const imageNumberToAdd = MAX_PRODUCT_IMAGES - images.length;
+
+    if (imageNumberToAdd <= 0) {
+      toast.error(`Maximum of ${MAX_PRODUCT_IMAGES} only. `);
+    }
 
     if (imageNumberToAdd < 1) {
       return;
@@ -63,13 +64,7 @@ export default function ImageSelector({
       return [...prev, ...imageValidateFormated]; // formated ];
     });
 
-    // converting the FileList from the input into a normal JavaScript array
-
-    /// NEED TO CLEAN UP THIS FUNCTION RE ORGANISE
     validateImageInput;
-    // validate image-> show error message if not ok
-    // create preview
-    // set the image inside the stat
   }
 
   return (
