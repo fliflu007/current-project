@@ -1,19 +1,23 @@
-import { patchProductSchema } from "@/schemas/product";
+import z from "zod";
+import { NextRequest, NextResponse } from "next/server";
+import { ValidationError } from "@/lib/errors/errors";
+import { validatePatchRequest } from "./patch-validation";
+
 import {
+  deleteImageDB,
   getProductById,
-  updateExistingImages,
-  updateNewImages,
-  updateProductDetails,
+  getProductImageData,
+  setPrimaryImageByPublicID,
 } from "@/services/products.service";
+import { addImagesToDB } from "@/services/products.service";
 
 import { deleteProduct } from "@/services/products.service";
+import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
+import { deleteImage } from "@/lib/cloudinary/operations";
 
-import { PatchProductinfos } from "@/types/product";
+import { updateProductDetails } from "@/services/products.service";
 
-import { validateProductImages } from "@/app/validation/product-image";
-import { validationError } from "@/lib/api/response";
-import { ValidationError } from "@/lib/errors/errors";
-
+import { getImagesToRemove } from "./helper";
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -23,10 +27,10 @@ export async function GET(
     const { id } = await params;
 
     // Call service
-    const data = await getProductById(id);
+    const productData = await getProductById(id);
 
     // Product not found
-    if (data === null) {
+    if (productData === null) {
       return Response.json(
         {
           data: null,
@@ -39,10 +43,16 @@ export async function GET(
       );
     }
 
+    // get all image Data
+    const productImages = await getProductImageData(id);
+    console.log("images", productImages);
+
+    const product = { ...productData, images: productImages };
+
     // Product found
     return Response.json(
       {
-        data,
+        data: product,
         error: null,
       },
       { status: 200 },
@@ -59,107 +69,6 @@ export async function GET(
       },
       { status: 500 },
     );
-  }
-}
-
-///// PATCH function
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    let productInfos: PatchProductinfos | null = null;
-
-    // 1 ---- get productID from Param
-    const { id } = await params;
-
-    // ============================================================
-    // 3. READ FORMDATA
-    // ============================================================
-
-    const formData = await request.formData();
-
-    const productRaw = formData.get("product");
-
-    // ============================================================
-    // 4. VALIDATE PRODUCT DATA
-    // ============================================================
-
-    if (productRaw !== null) {
-      let productRawParsed = JSON.parse(productRaw as string);
-
-      const ProductRawZodded = patchProductSchema.safeParse(productRawParsed);
-
-      if (!ProductRawZodded.success) {
-        return Response.json(
-          {
-            data: null,
-            error: {
-              code: "VALIDATION_ERROR",
-              message: "Invalid product data",
-              details: ProductRawZodded.error.flatten(),
-            },
-          },
-          { status: 400 },
-        );
-      }
-
-      productInfos = ProductRawZodded.data;
-    }
-
-    // MOVE VALIDAITON
-    const normalisedImages = validateProductImages(formData);
-
-    // Error return from Validation
-    if (normalisedImages instanceof Response) {
-      return normalisedImages;
-    }
-
-    // 3 Type : UPDATE DATAdetail only / PROCESS Image Exist  / PORCESS IMAGE ARE NEW / FINAL UPDATE isMain
-
-    // A UPDATE PRODUCT DETAIL
-    if (productInfos) {
-      await updateProductDetails(id, productInfos);
-    }
-
-    /// B PROCESS ExISTING IMAGES
-    if (normalisedImages) {
-      // return erased List[]
-      await updateExistingImages(id, normalisedImages);
-    }
-    /// C -Process NEw Images
-    if (normalisedImages) {
-      await updateNewImages(id, normalisedImages);
-    }
-    return Response.json({
-      data: { success: true },
-      error: null,
-    });
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: error.message,
-          },
-        },
-        { status: 400 },
-      );
-    } else {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Internal server error",
-          },
-        },
-        { status: 500 },
-      );
-    }
   }
 }
 
@@ -192,5 +101,126 @@ export async function DELETE(
       },
       { status: 500 },
     );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  // auth
+  try {
+    const { id } = await params;
+
+    const formdata = await request.formData();
+
+    const cleanRequest = await validatePatchRequest(formdata, id);
+
+    /// OPERATION //
+    const imagesInDB = await getProductImageData(id);
+
+    // Undefined here is not filed AT first So no Operation on them
+    let imagesToRemove: {
+      id: string;
+      productId: string;
+      url: string;
+      publicId: string;
+      isPrimary: boolean;
+      createdAt: Date;
+    }[] = [];
+
+    const existingImages = cleanRequest.existingImages;
+    if (existingImages) {
+      imagesToRemove = getImagesToRemove(imagesInDB, existingImages);
+    }
+
+    const imagesToAdd = cleanRequest.newImagesWFiles;
+
+    // 2. Upload new images to Cloudinary
+    const newImageCloudData: {
+      url: string;
+      publicId: string;
+      isPrimary: boolean;
+    }[] = [];
+    for (const image of imagesToAdd) {
+      const result = await uploadImageToCloudinary(image.file);
+      newImageCloudData.push({ ...result, isPrimary: image.isPrimary });
+    }
+    /////////////////////////////////////
+    /////// 3. DATABASE TRANSACTION /////
+    /////////////////////////////////////
+
+    /////  A → UPDATE DATA
+    if (cleanRequest.data && Object.keys(cleanRequest.data).length > 0) {
+      await updateProductDetails(id, cleanRequest.data);
+    }
+    // ADD NEW IMAGE TO DB
+    await addImagesToDB(
+      newImageCloudData.map((image) => ({
+        ...image,
+        isPrimary: false,
+      })),
+      id,
+    );
+    // SET PRIMARY ////////
+    // find it:
+    const existingPrimary = cleanRequest.existingImages?.find(
+      (image) => image.isPrimary,
+    );
+    // Find the selected primary image among newly uploaded images
+    const newPrimary = newImageCloudData.find((image) => image.isPrimary);
+    // Set it
+    if (existingPrimary) {
+      await setPrimaryImageByPublicID(existingPrimary.publicId, id);
+    } else if (newPrimary) {
+      await setPrimaryImageByPublicID(newPrimary?.publicId, id);
+    }
+
+    // C remove unwanted existing image records DB
+    if (imagesToRemove.length > 0) {
+      for (const currentImage of imagesToRemove) {
+        await deleteImageDB(currentImage.publicId);
+      }
+    }
+
+    ///////////////////////////////////////
+    ///////////////////////////////////////
+    ///////////////////////////////////////
+
+    // 4. Remove old images from Cloudinary
+    for (const images of imagesToRemove) {
+      await deleteImage(images.publicId);
+    }
+
+    // Temporary response: validation passed, no update performed.
+    return NextResponse.json("OK");
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: error.message ?? "Validation Error",
+          },
+        },
+        { status: 400 },
+      );
+    }
+    if (error instanceof z.ZodError) {
+      const message = error.issues[0]?.message;
+
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: message ?? "Invalid input",
+          },
+        },
+        { status: 400 },
+      );
+    }
+    throw error;
   }
 }
