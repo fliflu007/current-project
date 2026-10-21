@@ -1,6 +1,6 @@
 import Navbar from "@/components/navbar";
 
-import ProductUtilityBar from "@/components/product-utility-bar";
+import ProductUtilityBar from "@/components/products/product-utility-bar";
 import ProductCard from "@/components/product-card";
 import ProductToolbar from "@/components/product-toolbar";
 
@@ -8,12 +8,13 @@ import { requireUser } from "@/lib/auth/require-user";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import z from "zod";
-import { eq, and, inArray, count } from "drizzle-orm";
+import { eq, and, inArray, count, ilike } from "drizzle-orm";
 import { products, profiles, productImages } from "@/db/schema";
 
 type PageProps = {
   searchParams: Promise<{
     page?: string;
+    search?: string;
   }>;
 };
 
@@ -22,47 +23,74 @@ const pageSize = 10;
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
 
+  // here i need to get the query and : assign to search variable
+
   const user = await requireUser();
   if (user instanceof Response) {
     redirect("/login");
   }
 
-  // validate
+  // QueryValidation
   const pageParam = z.coerce.number().int().positive().safeParse(params.page);
-  const page = pageParam.success ? pageParam.data : 1;
+  let page = pageParam.success ? pageParam.data : 1;
+  const searchParam = z.string().safeParse(params.search);
+  const search = searchParam.success ? searchParam.data : "";
 
-  // offset 0= 1->20
-  const offset = (page - 1) * pageSize;
-
-  // get the Company id from userid
+  // get the Companyid from userid
   const companyResult = await db
     .select({ companyId: profiles.companyId })
     .from(profiles)
     .where(eq(profiles.id, user.id));
 
   if (companyResult.length === 0) {
-    throw new Error("Issue USer with no company assigned in DB ? ");
+    throw new Error("Issue user with no company assigned in DB... ");
   }
 
   const companyId = companyResult[0].companyId;
 
-  // call the db for product list
+  // get Sum
+  const [{ productSum }] = await db
+    .select({ productSum: count() })
+    .from(products)
+    .where(
+      and(
+        eq(products.companyId, companyId),
+        ilike(products.name, `%${search}%`),
+      ),
+    );
+
+  const lastPage = Math.ceil(productSum / pageSize);
+
+  // if page requested too high show furthest page
+  if (page > lastPage) {
+    page = lastPage;
+  }
+
+  // NO PRODUCT YET scenario
+  if (lastPage === 0) {
+    page = 1;
+  }
+
+  // page offset call start at 0
+  const offset = (page - 1) * pageSize;
+
+  // could (condition) it but gain for this call is tiny
   const productList = await db
     .select()
     .from(products)
-    .where(eq(products.companyId, companyId))
+
+    .where(
+      and(
+        eq(products.companyId, companyId),
+        ilike(products.name, `%${search}%`),
+      ),
+    )
     .limit(pageSize)
     .offset(offset);
 
-  const [{ totalProducts }] = await db
-    .select({ totalProducts: count() })
-    .from(products)
-    .where(eq(products.companyId, companyId));
-
-  const lastPage = totalProducts / pageSize;
-
   const productIds = productList.map((product) => product.id);
 
+  // getImage url, isprimary for each product.
   const mainImages = await db
     .select({
       productId: productImages.productId,
@@ -76,7 +104,7 @@ export default async function Page({ searchParams }: PageProps) {
       ),
     );
 
-  // COMBINE
+  // all data for ProductCard for eAch product Card component.
   const productsWithImages = productList.map((product) => {
     const mainImage = mainImages.find(
       (image) => image.productId === product.id,
@@ -86,8 +114,6 @@ export default async function Page({ searchParams }: PageProps) {
       mainImageUrl: mainImage?.url ?? null,
     };
   });
-
-  console.log("product list coming", productList);
 
   return (
     <div>
