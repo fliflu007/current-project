@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { products } from "@/db/schema";
+import { products, productImages } from "@/db/schema";
 
 // ** CREATE PRODUCT
 
@@ -61,3 +61,5 @@ export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 export type Product = Omit<ProductDB, "quantity"> & {
   quantity: number;
 };
+
+export type ProductImageDB = typeof productImages.$inferSelect;

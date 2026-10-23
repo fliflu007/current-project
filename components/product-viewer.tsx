@@ -4,15 +4,16 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useMediaQuery } from "@/hook/use-media-query";
-type ProductViewerProps = {
-  MovementHistoryTable: React.ReactNode;
-  ProductDetails: React.ReactNode;
-};
+import ProductDetails from "./product-details";
+import MovementHistoryTable from "./movement-history-table";
+
+import { ProductDetailUI } from "@/app/products/[id]/type";
 
 export default function ProductViewer({
-  MovementHistoryTable,
-  ProductDetails,
-}: ProductViewerProps) {
+  productDetail,
+}: {
+  productDetail: ProductDetailUI;
+}) {
   const [view, setView] = useState<"detail" | "inventory">("detail");
   const isMobile = useMediaQuery("(max-width: 767px)");
 
@@ -46,7 +47,7 @@ export default function ProductViewer({
             isMobile && view !== "detail" && "hidden",
           )}
         >
-          {ProductDetails}
+          <ProductDetails productDetail={productDetail} />
         </div>
         <div
           className={cn(
@@ -54,7 +55,7 @@ export default function ProductViewer({
             isMobile && view !== "inventory" && "hidden",
           )}
         >
-          {MovementHistoryTable}
+          <MovementHistoryTable />
         </div>
       </div>
     </div>
