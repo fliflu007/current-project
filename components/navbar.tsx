@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import { logOut } from "@/lib/auth/logout";
+import Link from "next/link";
 
 import {
   Select,
@@ -41,11 +42,11 @@ export default function Navbar() {
             INVENTORY SYSTEM
           </p>
         </div>
-
-        <div className="text-c-label hidden text-center sm:block">
-          PRODUCTS PAGE
-        </div>
-
+        <Link href="/">
+          <div className="text-c-label hidden text-center sm:block">
+            PRODUCTS PAGE
+          </div>
+        </Link>
         <AccountMenu
           items={items}
           className="ml-auto hidden sm:block lg:hidden"
