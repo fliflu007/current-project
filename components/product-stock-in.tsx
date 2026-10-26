@@ -25,8 +25,9 @@ import { useState, type FormEvent } from "react";
 import { ProductCardType } from "./product-card";
 import { AlertDestructive } from "@/components/alert";
 import { cn } from "cn";
-
+import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export function StockMovementDialog({
   product,
@@ -35,11 +36,13 @@ export function StockMovementDialog({
   product: ProductCardType;
   type: "IN" | "OUT";
 }) {
+  const router = useRouter();
+
   console.log("prop:", type);
   const [reason, setReason] = useState<string | null>(null);
   const [errorAPi, setErrorAPI] = useState<string | null>(null);
   const [isLoading, setIsloading] = useState<boolean>(false);
-
+  const [open, setOpen] = useState(false);
   const textColor = type === "IN" ? "text-green-600" : "text-red-600";
 
   async function submitForm(e: FormEvent<HTMLFormElement>) {
@@ -52,30 +55,42 @@ export function StockMovementDialog({
     // null if not provided
     const otherReason = formData.get("otherReason");
 
-    console.log("Quantity:", quantity);
-    console.log("Reason:", reason);
-    console.log("OtherReason:", otherReason);
-
     const exactReason = otherReason ? otherReason : reason;
 
-    const apirequest = {
+    const apiRequest = {
+      id: product.id,
+      type: type,
       quantity: quantity,
       reason: exactReason,
     };
+
+    console.log("api request :", apiRequest);
+
     try {
       const res = await fetch("/api/stock", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(apirequest),
+        body: JSON.stringify(apiRequest),
       });
-
       const response = await res.json();
       if (!res.ok) {
         setErrorAPI(response.error ?? "Error while fetching");
         return;
       }
+
+      if (type === "IN")
+        toast.success(
+          `Stock was successfully ${type === "IN" ? "added" : "deducted"}`,
+        );
+      else {
+        // successfulyl removed
+        toast.error("Stock succesfully removed");
+      }
+
+      setOpen(false);
+      router.refresh();
     } catch (e) {
       setErrorAPI("A network error occurred. Please try again.");
     } finally {
@@ -85,7 +100,7 @@ export function StockMovementDialog({
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
             <Button variant="outline">
@@ -156,7 +171,6 @@ export function StockMovementDialog({
                     maxLength={100}
                     required
                   />
-                  test
                 </Field>
               )}
 

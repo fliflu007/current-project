@@ -29,9 +29,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         duration: 5000,
         classNames: {
           toast: "cn-toast",
-          success:
-            "bg-green-600! text-white! border-green-600! [&_svg]:text-white!",
-          error: "bg-destructive! text-white! border-destructive!",
+          success: "!bg-green-600 !text-white !border-green-600",
+          error: "!bg-destructive !text-white !border-destructive",
         },
       }}
       {...props}

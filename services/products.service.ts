@@ -4,11 +4,12 @@ import { db } from "@/db";
 import { eq, inArray, and } from "drizzle-orm";
 import { profiles } from "@/db/schema";
 import { productImages, inventoryMovements } from "@/db/schema";
-
 import { ConflictError } from "@/lib/errors/errors";
 import { CreateProductData } from "@/schemas/product";
 import { PatchProductDataApi } from "@/app/products/[id]/edit/patch-types-schema";
+import { NotFoundError } from "@/lib/errors/errors";
 
+// Todo : implement erroring class
 export async function getCompanyId(userId: string) {
   const result = await db
     .select({ companyId: profiles.companyId })
@@ -98,8 +99,11 @@ export async function createProduct(
   };
 }
 
-export async function getProducts() {
-  const data = await db.select().from(products);
+export async function getProducts(companyId: string) {
+  const data = await db
+    .select()
+    .from(products)
+    .where(eq(products.companyId, companyId));
 
   return data.map((product) => ({
     ...product,
@@ -310,4 +314,21 @@ export async function addImagesToDB(
   for (const image of images) {
     await db.insert(productImages).values({ ...image, productId: id });
   }
+}
+
+export async function getProductForCompany(
+  productId: string,
+  companyId: string,
+) {
+  const [product] = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.id, productId), eq(products.companyId, companyId)))
+    .limit(1);
+
+  if (!product) {
+    throw new NotFoundError("Product not found");
+  }
+
+  return product;
 }
