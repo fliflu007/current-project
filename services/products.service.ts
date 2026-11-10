@@ -1,27 +1,13 @@
 import { products } from "@/db/schema";
 import { CreateProductInput } from "@/schemas/product";
 import { db } from "@/db";
-import { eq, inArray, and } from "drizzle-orm";
-import { profiles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+
 import { productImages, inventoryMovements } from "@/db/schema";
 import { ConflictError } from "@/lib/errors/errors";
 import { CreateProductData } from "@/schemas/product";
 import { PatchProductDataApi } from "@/app/products/[id]/edit/patch-types-schema";
 import { NotFoundError } from "@/lib/errors/errors";
-
-// Todo : implement erroring class
-export async function getCompanyId(userId: string) {
-  const result = await db
-    .select({ companyId: profiles.companyId })
-    .from(profiles)
-    .where(eq(profiles.id, userId));
-
-  if (!result[0]) {
-    throw new Error("Profile not found");
-  }
-
-  return result[0].companyId;
-}
 
 export async function insertProductDb(
   productData: CreateProductData,
