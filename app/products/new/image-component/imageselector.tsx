@@ -1,9 +1,10 @@
 import React from "react";
 import { validateImageInput } from "@/app/products/new/image-component/image-utils";
 import { normalizeImageInput } from "@/app/products/new/image-component/image-utils";
-import { ImageItemType } from "../page";
+
 import { addImagesWithLimit } from "@/app/products/new/image-component/image-utils";
 import { Input } from "@/components/ui/input";
+import { ImageItemType } from "./create-product-form";
 
 export default function ImageSelector({
   images,

@@ -1,8 +1,9 @@
 import React from "react";
-import { ImageItemType } from "../../create/page";
+
 import Image from "next/image";
 import { X, Star } from "lucide-react";
 import { cn } from "cn";
+import { ImageItemType } from "./create-product-form";
 
 export default function ImageItem2({
   image,

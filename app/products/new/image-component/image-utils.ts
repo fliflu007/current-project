@@ -1,7 +1,8 @@
 import { MAX_IMAGE_SIZE } from "@/constants/products";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/products";
-import { ImageItemType } from "../page";
+
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
+import { ImageItemType } from "./create-product-form";
 
 /**
  * Validates a list of image files.

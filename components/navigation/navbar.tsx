@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import AccountMenu from "@/components/account-menu";
+import AccountMenu from "@/components/navigation/account-menu";
 
 const items = [
   { value: "admin", label: "admin" },
@@ -23,7 +23,13 @@ const items = [
   { value: "viewer", label: "viewer" },
 ];
 
-export default function Navbar() {
+export default function Navbar({
+  isLoggedIn = true,
+}: {
+  isLoggedIn?: boolean;
+}) {
+  // todo adjust the Nav according to isLoggedIn
+
   const [showMobileNav, setMobileNav] = useState(false);
 
   return (

@@ -1,5 +1,8 @@
 import cloudinary from "@/lib/cloudinary/cloudinary";
-import { addImage, deleteImage } from "@/services/images";
+import {
+  uploadImageToCloudinary,
+  deleteImage,
+} from "@/lib/cloudinary/operations";
 import z from "zod";
 
 // Cloudinary upload result:
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await addImage(file);
+    const result = await uploadImageToCloudinary(file);
 
     return Response.json(
       {
