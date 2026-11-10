@@ -14,7 +14,7 @@ import {
 } from "@/app/products/[id]/edit/patch-types-schema";
 import ImageSelector from "@/app/products/[id]/edit/image-selector";
 
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
 import ImageItem from "@/app/products/[id]/edit/image-item";
 import {
@@ -28,7 +28,7 @@ import { LoaderCircle } from "lucide-react";
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
 // COMPONENT
-export default function EditCard({
+export default function ProductEditForm({
   product,
 }: {
   product: ProductByIdResponse;

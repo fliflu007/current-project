@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/carousel";
 import Link from "next/link";
 import Image from "next/image";
-import ProductDeleteDialog from "./product-delete-dial";
+import ProductDeleteDialog from "./product-delete-dialog";
 import { ProductDetailUI } from "@/app/products/[id]/type";
 import { deleteByIdAction } from "@/app/products/[id]/action";
 
@@ -31,7 +31,7 @@ export default function ProductDetails({
     typeof window === "undefined" ? "SERVER" : "BROWSER",
   );
   return (
-    <div>
+    <div className="flex w-full justify-center md:block md:w-fit">
       <Card className="w-full max-w-sm shadow-md">
         <CardHeader>
           <CardTitle>Product name : {productDetail.data.name}</CardTitle>

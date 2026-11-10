@@ -3,7 +3,7 @@
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { StockMovementDialog } from "./product-stock-in";
+import { StockMovementDialog } from "./stock-movement-dialog";
 
 export type ProductCardType = {
   mainImageUrl: string | null;

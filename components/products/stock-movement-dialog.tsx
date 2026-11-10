@@ -7,7 +7,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "./ui/select";
+} from "../ui/select";
 import {
   Dialog,
   DialogClose,

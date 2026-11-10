@@ -8,11 +8,16 @@ import ProductDetails from "./product-details";
 import MovementHistoryTable from "./movement-history-table";
 
 import { ProductDetailUI } from "@/app/products/[id]/type";
+import { InventoryMovementDB } from "@/schemas/inventory";
 
-export default function ProductViewer({
+export default function ProductDetailViewer({
   productDetail,
+  historicalMovements,
+  perpage,
 }: {
   productDetail: ProductDetailUI;
+  historicalMovements: InventoryMovementDB[];
+  perpage: number;
 }) {
   const [view, setView] = useState<"detail" | "inventory">("detail");
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -41,12 +46,7 @@ export default function ProductViewer({
       </Tabs>
 
       <div className="md:flex md:mx-auto md:gap-6 max-w-7xl ">
-        <div
-          className={cn(
-            "flex w-full justify-center md:block md:w-fit",
-            isMobile && view !== "detail" && "hidden",
-          )}
-        >
+        <div className={cn(isMobile && view !== "detail" && "hidden")}>
           <ProductDetails productDetail={productDetail} />
         </div>
         <div
@@ -55,7 +55,10 @@ export default function ProductViewer({
             isMobile && view !== "inventory" && "hidden",
           )}
         >
-          <MovementHistoryTable />
+          <MovementHistoryTable
+            historicalMovements={historicalMovements}
+            perpage={perpage}
+          />
         </div>
       </div>
     </div>
