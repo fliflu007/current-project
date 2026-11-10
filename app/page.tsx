@@ -1,8 +1,8 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/navigation/navbar";
 
 import ProductUtilityBar from "@/components/products/product-utility-bar";
-import ProductCard from "@/components/product-card";
-import ProductToolbar from "@/components/product-toolbar";
+import ProductCard from "@/components/products/product-card";
+import ProductToolbar from "@/components/products/product-toolbar";
 
 import { requireUser } from "@/lib/auth/require-user";
 import { redirect } from "next/navigation";
@@ -118,6 +118,7 @@ export default async function Page({ searchParams }: PageProps) {
   return (
     <div>
       <Navbar></Navbar>
+
       <ProductToolbar></ProductToolbar>
       <ProductUtilityBar currentPage={page} lastPage={lastPage} />
       <div className="grid grid-cols-1 lg:grid-cols-2  2xl:grid-cols-3 gap-6 container mx-auto">

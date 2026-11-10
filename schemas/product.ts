@@ -7,7 +7,7 @@ import { products, productImages } from "@/db/schema";
 export const createProductDataSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().max(50, "Maximum 50 characters").optional(),
-  // Form value is a string → convert to number
+  // Accept number and string that are convertible=>number
   quantity: z.coerce.number().min(0, "Stock cannot be negative"),
 });
 
