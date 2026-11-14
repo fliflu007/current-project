@@ -1,12 +1,10 @@
 import { CreateProductSchema } from "@/schemas/product";
 
-import { ZodError } from "zod";
 import z from "zod";
 
 import { getProducts } from "@/services/products.service";
-import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/auth/require-user";
-import { getCompanyId } from "@/services/products.service";
+import { requireUser, requireUserId } from "@/lib/auth/require-user";
+import { getCompanyId } from "@/services/profiles.service";
 import { createProduct } from "@/services/products.service";
 
 export async function POST(request: Request) {
@@ -59,8 +57,22 @@ export async function GET() {
     // TODO: get profile
     // TODO: authorize user
     // TODO: filter products by user's company
+    //
+    const userId = await requireUserId();
+    if (!userId) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "You must be logged in to view products",
+          },
+        },
+        { status: 401 },
+      );
+    }
 
-    const data = await getProducts();
+    const data = await getProducts(userId);
 
     return Response.json(
       {
