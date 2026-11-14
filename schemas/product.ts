@@ -5,7 +5,10 @@ import { products, productImages } from "@/db/schema";
 
 // FORM
 export const createProductDataSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters")
+    .max(25, "Maximum 25 characters"),
   description: z.string().max(50, "Maximum 50 characters").optional(),
   // Accept number and string that are convertible=>number
   quantity: z.coerce.number().min(0, "Stock cannot be negative"),
@@ -29,7 +32,7 @@ export const imageDataSchema = z.array(
 
 // API create Zod -> Type
 export const CreateProductSchema = z.object({
-  name: z.string().min(3),
+  name: z.string().min(3).max(25),
   description: z.string().optional(),
   quantity: z.number().min(0),
   images: z

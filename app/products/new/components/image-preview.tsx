@@ -1,18 +1,16 @@
-import React from "react";
-
 import Image from "next/image";
 import { X, Star } from "lucide-react";
 import { cn } from "cn";
 import { ImageItemType } from "./create-product-form";
 
-export default function ImageItem2({
+export default function ImagePreview({
   image,
   removeImage,
   setMainImage,
 }: {
   image: ImageItemType;
-  removeImage: (previewUrl: string) => void;
-  setMainImage: (previewUrl: string) => void;
+  removeImage: () => void;
+  setMainImage: () => void;
 }) {
   return (
     <div>
@@ -27,18 +25,13 @@ export default function ImageItem2({
         </div>
 
         <div className="flex flex-col gap-3 p-2">
-          <div
-            className="flex items-center gap-3"
-            onClick={() => {
-              removeImage(image.previewUrl);
-            }}
-          >
+          <div className="flex items-center gap-3" onClick={removeImage}>
             <X className="shrink-0" />
             <p>Remove</p>
           </div>
 
           <div
-            onClick={() => setMainImage(image.previewUrl)}
+            onClick={setMainImage}
             className={cn(
               "flex items-center gap-3",
               image.isMain && "bg-green-200",

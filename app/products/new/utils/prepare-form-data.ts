@@ -1,5 +1,5 @@
 import { CreateProductData } from "@/schemas/product";
-import { ImageItemType } from "./image-component/create-product-form";
+import { ImageItemType } from "../components/create-product-form";
 
 /**
  * Builds the FormData payload expected by the create-product API.

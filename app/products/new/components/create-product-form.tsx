@@ -1,36 +1,23 @@
 "use client";
 
 import z from "zod";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-import { MAX_PRODUCT_IMAGES } from "@/constants/products";
-
-import ImageSelector from "./imageselector";
-
-//import ImageSelector from "./image-component/imageselector";
-import ImageItem2 from "./image-item2";
-import { prepareFormData } from "../prepare-form-data";
-
+import { prepareFormData } from "../utils/prepare-form-data";
 import { toast } from "sonner";
+import ProductImageManager from "./productimagemanager";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { createProductDataSchema } from "@/schemas/product";
 
-const createDataFormSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().max(50, "Maximum 50 characters").optional(),
-  quantity: z.coerce.number().min(0),
-});
-export type CreateDataForm = z.infer<typeof createDataFormSchema>;
+export type CreateDataForm = z.infer<typeof createProductDataSchema>;
 
-// IMAGE STATE FORMAT
-// Compatible with ImageInput and ImageItem components
 export type ImageItemType = {
   file: File;
   previewUrl: string;
@@ -39,7 +26,7 @@ export type ImageItemType = {
 
 export default function CreateProductForm() {
   const form = useForm<CreateDataForm>({
-    resolver: zodResolver(createDataFormSchema),
+    resolver: zodResolver(createProductDataSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -48,47 +35,32 @@ export default function CreateProductForm() {
     },
   });
 
+  //init images state
   const [images, setImages] = useState<ImageItemType[]>([]);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  const removeImage = (previewUrl: string) => {
-    if (images.length <= 1) {
-      return;
+  // reset submit error if images are added after a failed submission
+  useEffect(() => {
+    console.log("read Useffect");
+    console.log("hasAttemptedSubmit:", hasAttemptedSubmit);
+    if (hasAttemptedSubmit && images.length > 0) {
+      console.log("resetting submit error");
+      setSubmitError(null);
     }
+  }, [images, hasAttemptedSubmit]);
 
-    const imageToRemove = images.find(
-      (image) => image.previewUrl === previewUrl,
-    );
-
-    const remainingImages = images.filter(
-      (image) => image.previewUrl !== previewUrl,
-    );
-
-    if (imageToRemove?.isMain) {
-      remainingImages[0] = {
-        ...remainingImages[0],
-        isMain: true,
-      };
-    }
-
-    setImages(remainingImages);
-  };
-
-  const setMainImage = (previewUrl: string) => {
-    setImages((current) =>
-      current.map((image) => ({
-        ...image,
-        isMain: image.previewUrl === previewUrl,
-      })),
-    );
-  };
-
+  // Handle form submission
   const onSubmit = async (data: CreateDataForm) => {
+    setHasAttemptedSubmit(true);
+
+    // Validate Images readyness
     if (images.length === 0) {
-      setImageError("Requires at least one image...");
+      setSubmitError("Requires at least one image...");
       return;
     }
 
+    // prepare the form data for api submission
     const payload = prepareFormData(data, images);
 
     const res = await fetch("/api/product/create", {
@@ -101,6 +73,11 @@ export default function CreateProductForm() {
     if (!res.ok) {
       const body = await res.json();
 
+      if (res.status === 409) {
+        setSubmitError("Product with this name already exists.");
+        return;
+      }
+
       toast.error(body.error?.message ?? "Something went wrong");
 
       return;
@@ -110,7 +87,6 @@ export default function CreateProductForm() {
 
     form.reset();
     setImages([]);
-    setImageError(null);
   };
   return (
     <div>
@@ -172,30 +148,21 @@ export default function CreateProductForm() {
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="image">Product image</FieldLabel>
-                    <ImageSelector
+                    <ProductImageManager
                       images={images}
                       setImages={setImages}
-                      setImageError={setImageError}
-                    ></ImageSelector>
-
-                    <p>{MAX_PRODUCT_IMAGES} images max..</p>
-                    {imageError && (
-                      <p className="text-sm text-destructive">{imageError}</p>
+                    ></ProductImageManager>
+                  </Field>
+                  <Field>
+                    {submitError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Submission Error</AlertTitle>
+                        <AlertDescription>{submitError}</AlertDescription>
+                      </Alert>
                     )}
                   </Field>
-
-                  <Field>
-                    <div className="flex flex-col gap-4">
-                      {images.map((image) => (
-                        <ImageItem2
-                          key={image.previewUrl}
-                          image={image}
-                          removeImage={removeImage}
-                          setMainImage={setMainImage}
-                        ></ImageItem2>
-                      ))}
-                    </div>
-                  </Field>
+                  <Field></Field>
 
                   <Button className="py-5 font-bold" type="submit">
                     Create Product

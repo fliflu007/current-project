@@ -1,9 +1,6 @@
-import { z } from "zod";
-
 import { ValidationError } from "@/lib/errors/errors";
 import { imageDataSchema } from "@/schemas/product";
 import { validateImageFile } from "@/app/validation/product-image";
-
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
 export function validateProductImages(formData: FormData) {
@@ -26,12 +23,6 @@ export function validateProductImages(formData: FormData) {
     console.log("JSON PARSE FAILED");
     throw new ValidationError("Invalid image data");
   }
-
-  // try {
-  //   let parsedImageData = JSON.parse(rawImageData);
-  // } catch {
-  //   throw new ValidationError("Invalid image data");
-  // }
 
   // 3. Validate image structure
   const imageData = imageDataSchema.parse(parsedImageData);

@@ -1,50 +1,47 @@
 import React from "react";
-import { validateImageInput } from "@/app/products/new/image-component/image-utils";
-import { normalizeImageInput } from "@/app/products/new/image-component/image-utils";
-
-import { addImagesWithLimit } from "@/app/products/new/image-component/image-utils";
+import { validateImageInput } from "@/app/products/new/utils/image-utils";
+import { normalizeImageInput } from "@/app/products/new/utils/image-utils";
 import { Input } from "@/components/ui/input";
 import { ImageItemType } from "./create-product-form";
 
 export default function ImageSelector({
   images,
   setImages,
-  setImageError,
+  setImageInputErrors,
 }: {
   images: ImageItemType[];
   setImages: React.Dispatch<React.SetStateAction<ImageItemType[]>>;
-  setImageError: React.Dispatch<React.SetStateAction<string | null>>;
+  setImageInputErrors: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawFiles = event.target.files;
     if (!rawFiles) {
       return;
     }
+    setImageInputErrors([]);
     // ACTION on FILE IN SELECTOR
     // SELECTOR CAN be NULL IF so []
     const files = Array.from(rawFiles);
-    const validatedFiles = validateImageInput(files);
+    if (files.length === 0) return;
+
+    const validatedFiles = validateImageInput(files, images.length);
 
     // VALIDATION ERROR
 
-    if (validatedFiles.error || validatedFiles.files === null) {
-      setImageError(
-        "One of th image you tried to add has a size or format issue !!",
-      );
+    if (!validatedFiles.files) {
+      setImageInputErrors([validatedFiles.error]);
       return;
     }
-    setImageError(null);
 
-    const hasExistingImage = Boolean(images && images.length > 0);
+    const hasExistingImage = images.length > 0;
 
-    // Normalize files into image state format
+    // Normalize new files into image state format
     // Create previewUrl and set isMain
     const normalizedImages = normalizeImageInput(
       validatedFiles.files,
       hasExistingImage,
     );
-
-    setImages((prev) => addImagesWithLimit(prev, normalizedImages));
+    setImages((prev) => [...prev, ...normalizedImages]);
   };
 
   return (

@@ -1,29 +1,44 @@
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/auth/require-user";
-import { createProduct, getCompanyId } from "@/services/products.service";
+import { products } from "@/db/schema";
 import { ValidationError, ConflictError } from "@/lib/errors/errors";
 import { createProductDataSchema } from "@/schemas/product";
 import z from "zod";
 import { validateProductImages } from "./validation";
 import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
-
 import { insertProductDb } from "@/services/products.service";
 import { db } from "@/db";
 import { productImages } from "@/db/schema";
-
-type NormalizedImage = {
-  file: File;
-  isMain: boolean;
-  url?: string;
-  publicId?: string;
-};
+import {
+  conflictResponse,
+  forbiddenResponse,
+  profileNotFoundResponse,
+  unauthorizedResponse,
+  validationErrorResponse,
+} from "@/lib/api/response";
+import { and, eq } from "drizzle-orm";
+import { requireUserContext } from "@/lib/auth/require-user-context";
 
 export async function POST(request: Request) {
+  let companyId: string;
+
   try {
-    const userId = process.env.TEST_USER_ID;
+    // AUTHENTICATION
+    const userId = await requireUserId();
     if (!userId) {
-      throw new Error("TEST_USER_ID is not configured");
+      return unauthorizedResponse();
     }
+    // AUTHORIZATION
+    const userContext = await requireUserContext(userId);
+
+    if (!userContext) {
+      return profileNotFoundResponse();
+    }
+    if (userContext.role !== "admin") {
+      return forbiddenResponse();
+    }
+
+    companyId = userContext.companyId;
 
     const formData = await request.formData();
 
@@ -33,15 +48,37 @@ export async function POST(request: Request) {
     //********* DATA validation
     //string | File | null
     if (typeof rawProductData !== "string") {
-      throw new ValidationError("Invalid product data");
+      return validationErrorResponse("Invalid product data");
     }
+
     const productData = JSON.parse(rawProductData);
-    const productDataValidated = createProductDataSchema.parse(productData);
+
+    const resultData = createProductDataSchema.safeParse(productData);
+
+    if (!resultData.success) {
+      return validationErrorResponse("Invalid product data");
+    }
+    const productDataValidated = resultData.data;
+
+    /// Check if Duplicated Product Name
+
+    const existingProduct = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(
+        and(
+          eq(products.companyId, companyId),
+          eq(products.name, productDataValidated.name),
+        ),
+      )
+      .limit(1);
+
+    if (existingProduct.length > 0) {
+      throw new ConflictError("Product name already exists");
+    }
 
     // ****** VALIDATE IMAGE METADATA + FILE INTEGRITY
     const validatedImageData = validateProductImages(formData);
-
-    const companyId = await getCompanyId(userId);
 
     // *******  UPLOAD IMAGE TO CLOUDINARY
     const uploadedImages: {
@@ -65,7 +102,7 @@ export async function POST(request: Request) {
       companyId,
     );
 
-    // INSERT IMAGES IN DB
+    // CREATE IMAGES IN DB
     const result = await db.transaction(async (tx) => {
       const insertedImages = [];
 
@@ -121,16 +158,7 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof ConflictError) {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "CONFLICT",
-            message: error.message,
-          },
-        },
-        { status: 409 },
-      );
+      return conflictResponse(error.message);
     }
 
     console.error("CREATE PRODUCT ERROR:", error);

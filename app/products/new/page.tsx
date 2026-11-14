@@ -1,6 +1,6 @@
 import React from "react";
 import Navbar from "@/components/navigation/navbar";
-import CreateProductForm from "./image-component/create-product-form";
+import CreateProductForm from "./components/create-product-form";
 
 export default function page() {
   return (
