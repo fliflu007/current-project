@@ -9,19 +9,19 @@ import Logo from "@/components/logo";
 import z from "zod";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Demo from "@/lib/auth/demo";
+import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(4),
 });
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Page() {
   const router = useRouter();
-
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -29,7 +29,6 @@ export default function Page() {
       password: "",
     },
   });
-  type LoginFormData = z.infer<typeof loginSchema>;
 
   const onSubmit = async (formdata: LoginFormData) => {
     // Client Supabase Log
@@ -98,23 +97,14 @@ export default function Page() {
         </form>
         <p className="text-center text-muted-foreground p-4 pb-52">
           Need an account ?{" "}
-          <span
-            onClick={() => router.push("/register")}
+          <Link
+            href="/register"
             className="text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
             Sign up
-          </span>
+          </Link>
         </p>
       </div>
-      <Toaster
-        position="top-left"
-        toastOptions={{
-          classNames: {
-            success: "bg-green-50! border-green-200! text-green-700!",
-            error: "bg-red-50! border-red-200! text-red-700!",
-          },
-        }}
-      />
     </div>
   );
 }

@@ -8,16 +8,18 @@ import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
+
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Demo from "@/lib/auth/demo";
+import Link from "next/link";
 
 const registerSchema = z.object({
   companyName: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(4),
 });
+
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Page() {
@@ -30,8 +32,8 @@ export default function Page() {
       companyName: "",
     },
   });
+
   async function onSubmit(formdata: RegisterFormData) {
-    console.log("testpass", formdata);
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
@@ -50,8 +52,7 @@ export default function Page() {
       return;
     }
     toast.success("success creation");
-    console.log(result.data);
-    // need to login and redirect
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: formdata.email,
@@ -122,24 +123,14 @@ export default function Page() {
         </form>
         <p className="text-center text-muted-foreground p-4 pb-52">
           Already have an account ?
-          <span
+          <Link
             className="text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
-            onClick={() => router.push("/login")}
+            href="/login"
           >
-            {" "}
             Login
-          </span>
+          </Link>
         </p>
       </div>
-      <Toaster
-        position="top-left"
-        toastOptions={{
-          classNames: {
-            success: "bg-green-50! border-green-200! text-green-700!",
-            error: "bg-red-50! border-red-200! text-red-700!",
-          },
-        }}
-      />
     </div>
   );
 }
