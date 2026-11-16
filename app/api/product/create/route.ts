@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     if (!userId) {
       return unauthorizedResponse();
     }
+
     // AUTHORIZATION
     const userContext = await requireUserContext(userId);
 
@@ -56,7 +57,9 @@ export async function POST(request: Request) {
     const resultData = createProductDataSchema.safeParse(productData);
 
     if (!resultData.success) {
-      return validationErrorResponse("Invalid product data");
+      return validationErrorResponse(
+        resultData.error.issues.map((issue) => issue.message).join(", "),
+      );
     }
     const productDataValidated = resultData.data;
 
