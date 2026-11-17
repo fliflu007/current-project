@@ -1,15 +1,14 @@
 import Navbar from "@/components/navigation/navbar";
-
 import ProductUtilityBar from "@/components/products/product-utility-bar";
 import ProductCard from "@/components/products/product-card";
 import ProductToolbar from "@/components/products/product-toolbar";
-
-import { requireUser } from "@/lib/auth/require-user";
+import { requireUserId } from "@/lib/auth/require-user";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import z from "zod";
 import { eq, and, inArray, count, ilike } from "drizzle-orm";
-import { products, profiles, productImages } from "@/db/schema";
+import { products, productImages } from "@/db/schema";
+import { requireUserContext } from "@/lib/auth/require-user-context";
 
 type PageProps = {
   searchParams: Promise<{
@@ -21,34 +20,23 @@ type PageProps = {
 const pageSize = 10;
 
 export default async function Page({ searchParams }: PageProps) {
+  // if not will be undefined.
   const params = await searchParams;
-
-  // here i need to get the query and : assign to search variable
-
-  const user = await requireUser();
-  if (user instanceof Response) {
+  const user = await requireUserId();
+  if (!user) {
     redirect("/login");
   }
+  const { companyId, role } = await requireUserContext(user);
 
-  // QueryValidation
   const pageParam = z.coerce.number().int().positive().safeParse(params.page);
-  let page = pageParam.success ? pageParam.data : 1;
+  let page: number;
+  page = !pageParam.success ? 1 : pageParam.data;
+
   const searchParam = z.string().safeParse(params.search);
+
   const search = searchParam.success ? searchParam.data : "";
 
-  // get the Companyid from userid
-  const companyResult = await db
-    .select({ companyId: profiles.companyId })
-    .from(profiles)
-    .where(eq(profiles.id, user.id));
-
-  if (companyResult.length === 0) {
-    throw new Error("Issue user with no company assigned in DB... ");
-  }
-
-  const companyId = companyResult[0].companyId;
-
-  // get Sum
+  // get quantity of product
   const [{ productSum }] = await db
     .select({ productSum: count() })
     .from(products)
@@ -59,26 +47,26 @@ export default async function Page({ searchParams }: PageProps) {
       ),
     );
 
+  // identify last page value
   const lastPage = Math.ceil(productSum / pageSize);
 
-  // if page requested too high show furthest page
+  /// DEFINE PAGE
+  // Page params > existingpage
   if (page > lastPage) {
     page = lastPage;
   }
-
   // NO PRODUCT YET scenario
   if (lastPage === 0) {
     page = 1;
   }
-
   // page offset call start at 0
   const offset = (page - 1) * pageSize;
 
+  /// GET PRODUCT LIST
   // could (condition) it but gain for this call is tiny
   const productList = await db
     .select()
     .from(products)
-
     .where(
       and(
         eq(products.companyId, companyId),
@@ -90,7 +78,8 @@ export default async function Page({ searchParams }: PageProps) {
 
   const productIds = productList.map((product) => product.id);
 
-  // getImage url, isprimary for each product.
+  // GET PRODUCT IMAGES INFO
+  // getImage ProductID and url of Primary Image only.
   const mainImages = await db
     .select({
       productId: productImages.productId,
@@ -104,27 +93,39 @@ export default async function Page({ searchParams }: PageProps) {
       ),
     );
 
-  // all data for ProductCard for eAch product Card component.
+  // GROUP IMAGE DATA AND IMAGES
   const productsWithImages = productList.map((product) => {
     const mainImage = mainImages.find(
       (image) => image.productId === product.id,
     );
+    if (!mainImage) {
+      throw new Error("Product has no primary image");
+    }
     return {
       ...product,
-      mainImageUrl: mainImage?.url ?? null,
+      mainImageUrl: mainImage.url,
     };
   });
 
   return (
     <div>
-      <Navbar></Navbar>
+      <Navbar role={role as "admin" | "staff" | "viewer"} />
+      <ProductToolbar />
 
-      <ProductToolbar></ProductToolbar>
-      <ProductUtilityBar currentPage={page} lastPage={lastPage} />
-      <div className="grid grid-cols-1 lg:grid-cols-2  2xl:grid-cols-3 gap-6 container mx-auto">
-        {productsWithImages.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+      <div className="container mx-auto">
+        <ProductUtilityBar currentPage={page} lastPage={lastPage} />
+
+        {productSum < 1 ? (
+          <div className="flex min-h-100 items-center justify-center">
+            <p className="text-muted-foreground">No products found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+            {productsWithImages.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
