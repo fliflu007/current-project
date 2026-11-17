@@ -1,6 +1,6 @@
-import EditCard from "@/components/edit-card";
+import ProductEditForm from "@/components/products/product-edit-form";
 
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/navigation/navbar";
 
 import { notFound } from "next/navigation";
 
@@ -37,7 +37,7 @@ export default async function Page({
 
         <main className="flex flex-1 my-10 justify-center">
           <div className="w-136 overflow-visible">
-            <EditCard product={product} />
+            <ProductEditForm product={product} />
           </div>
         </main>
       </div>

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { validateImageInput } from "../../new/image-component/image-utils";
+import { validateImageInput } from "../../new/utils/image-utils";
 import { validateProductImages } from "@/app/api/product/create/validation";
 import { validateImageFile } from "@/app/validation/product-image";
 import { ProductImage } from "./patch-types-schema";

@@ -13,7 +13,7 @@ import { prepareFormData } from "../utils/prepare-form-data";
 import { toast } from "sonner";
 import ProductImageManager from "./productimagemanager";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, LoaderCircle } from "lucide-react";
 import { createProductDataSchema } from "@/schemas/product";
 
 export type CreateDataForm = z.infer<typeof createProductDataSchema>;
@@ -34,6 +34,7 @@ export default function CreateProductForm() {
       quantity: 0,
     },
   });
+  const { isSubmitting } = form.formState;
 
   //init images state
   const [images, setImages] = useState<ImageItemType[]>([]);
@@ -74,10 +75,13 @@ export default function CreateProductForm() {
       const body = await res.json();
 
       if (res.status === 409) {
-        setSubmitError("Product with this name already exists.");
+        form.setError("name", {
+          type: "server",
+          message: "Product with this name already exists.",
+        });
         return;
       }
-
+      console.log("error", body.error?.message ?? "Something went wrong");
       toast.error(body.error?.message ?? "Something went wrong");
 
       return;
@@ -164,8 +168,19 @@ export default function CreateProductForm() {
                   </Field>
                   <Field></Field>
 
-                  <Button className="py-5 font-bold" type="submit">
-                    Create Product
+                  <Button
+                    className="py-5 font-bold"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        Creating Product...
+                        <LoaderCircle className="animate-spin" />
+                      </>
+                    ) : (
+                      "Create Product"
+                    )}
                   </Button>
                 </FieldGroup>
               </form>

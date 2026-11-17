@@ -1,8 +1,6 @@
-import Navbar from "@/components/navbar";
-
-import ProductToolbar from "@/components/product-toolbar";
-
-import ProductViewer from "@/components/product-viewer";
+import Navbar from "@/components/navigation/navbar";
+import ProductToolbar from "@/components/products/product-toolbar";
+import ProductViewer from "@/components/products/product-detail-viewer";
 import { requireUserId } from "@/lib/auth/require-user";
 import { redirect, notFound } from "next/navigation";
 import z from "zod";
@@ -12,6 +10,7 @@ import { and } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { productImages } from "@/db/schema";
 import { ProductDetailUI } from "./type";
+import { inventoryMovements } from "@/db/schema";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -65,10 +64,18 @@ export default async function page({ params }: PageProps) {
     .where(eq(productImages.productId, productId.data));
 
   if (images.length == 0) {
+    // Unexpected Error Every product must have at least ONE IMAGE
+    // Might be Adjusted later
     throw new Error("Product image not found");
   }
 
   // 6.  NOT FOR NOW => Fetch the product's movement history
+  const perpage = 20;
+  const historicalMovements = await db
+    .select()
+    .from(inventoryMovements)
+    .where(eq(inventoryMovements.productId, productId.data))
+    .limit(perpage);
 
   // 7. Pass the data to the display components
   const productDetail: ProductDetailUI = { data: product1, images: images };
@@ -80,7 +87,11 @@ export default async function page({ params }: PageProps) {
       <div className="mb-8">
         <ProductToolbar></ProductToolbar>
       </div>
-      <ProductViewer productDetail={productDetail} />
+      <ProductViewer
+        productDetail={productDetail}
+        historicalMovements={historicalMovements}
+        perpage={perpage}
+      />
     </div>
   );
 }
