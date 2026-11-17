@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { InternalServerError } from "../api/api.error";
 
 export async function requireUserContext(userId: string) {
   const [profile] = await db
@@ -13,7 +14,7 @@ export async function requireUserContext(userId: string) {
     .limit(1);
 
   if (!profile) {
-    return null;
+    throw new InternalServerError("User profile not found");
   }
 
   return profile;
