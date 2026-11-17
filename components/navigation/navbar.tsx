@@ -15,27 +15,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import AccountMenu from "@/components/navigation/account-menu";
 
 const items = [
   { value: "admin", label: "admin" },
-  { value: "editor", label: "editor" },
+  { value: "staff", label: "staff" },
   { value: "viewer", label: "viewer" },
 ];
 
 export default function Navbar({
-  isLoggedIn = true,
+  role = "not provided",
 }: {
-  isLoggedIn?: boolean;
+  role?: "admin" | "staff" | "viewer" | "not provided";
 }) {
   // todo adjust the Nav according to isLoggedIn
 
   const [showMobileNav, setMobileNav] = useState(false);
 
   return (
-    <nav className="relative h-14">
+    <nav className="sticky top-0 z-50 h-14 bg-white">
       {/* Desktop */}
-      <div className="container mx-auto grid h-full grid-cols-2 items-center px-6 sm:grid-cols-3">
+      <div className="container mx-auto grid h-full grid-cols-3 items-center">
         <div className="navbar-brand flex items-center gap-5 p-3">
           <Image
             src="/logo.svg"
@@ -53,15 +52,11 @@ export default function Navbar({
             PRODUCTS PAGE
           </div>
         </Link>
-        <AccountMenu
-          items={items}
-          className="ml-auto hidden sm:block lg:hidden"
-        />
 
-        <div className="right_side_block ml-auto hidden gap-4 lg:flex">
+        <div className="right_side_block hidden md:flex gap-2">
           <Select items={items}>
             <SelectTrigger className="w-45">
-              <SelectValue placeholder="Role" />
+              <SelectValue placeholder={role} />
             </SelectTrigger>
 
             <SelectContent>
@@ -90,23 +85,17 @@ export default function Navbar({
           }}
           variant="ghost"
           size="icon"
-          className="ml-auto hover:bg-accent sm:hidden"
+          className="ml-auto hover:bg-accent md:hidden"
         >
           <Menu />
         </Button>
       </div>
-
-      {/* Mobile menu */}
       {showMobileNav && (
-        <div className="absolute left-0 top-14 z-50 h-[calc(100vh-3.5rem)] w-full bg-background sm:hidden">
+        <div className="absolute left-0 top-14 z-50 h-[calc(100vh-3.5rem)] w-full bg-background md:hidden">
           <div className="grid h-52 grid-rows-4 items-center justify-items-center">
-            <p className="flex h-full w-full items-center justify-center text-center hover:bg-accent">
-              PRODUCT PAGE
-            </p>
-
             <Select items={items}>
               <SelectTrigger className="w-45">
-                <SelectValue placeholder="Role" />
+                <SelectValue placeholder={role} />
               </SelectTrigger>
 
               <SelectContent>
