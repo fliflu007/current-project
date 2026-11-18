@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+
 export async function requireUser() {
   const supabase = await createClient();
 
@@ -27,6 +28,9 @@ export async function requireUserId() {
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.getUser();
+
+  console.log("USER:", data.user?.id);
+  console.log("AUTH ERROR:", error?.message);
 
   if (error || !data.user) {
     return null;
