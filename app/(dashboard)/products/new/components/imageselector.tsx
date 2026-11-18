@@ -1,6 +1,6 @@
 import React from "react";
-import { validateImageInput } from "@/app/products/new/utils/image-utils";
-import { normalizeImageInput } from "@/app/products/new/utils/image-utils";
+import { normalizeImageInput } from "../utils/image-utils";
+import { validateImageInput } from "../utils/image-utils";
 import { Input } from "@/components/ui/input";
 import { ImageItemType } from "./create-product-form";
 
