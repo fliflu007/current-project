@@ -6,3 +6,5 @@ node_modules/
 # Playground: temporary experiments and tests that are not part of the final application
 app/auth-test 
 app/api/auth-test
+app/playgroundtest
+app/playground/
