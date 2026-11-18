@@ -34,7 +34,7 @@ export default function Navbar({
   return (
     <nav className="sticky top-0 z-50 h-14 bg-white">
       {/* Desktop */}
-      <div className="container mx-auto grid h-full grid-cols-3 items-center">
+      <div className="container mx-auto grid h-full grid-cols-2 lg:grid-cols-3 items-center">
         <div className="navbar-brand flex items-center gap-5 p-3">
           <Image
             src="/logo.svg"
@@ -47,13 +47,11 @@ export default function Navbar({
             INVENTORY SYSTEM
           </p>
         </div>
-        <Link href="/">
-          <div className="text-c-label hidden text-center sm:block">
-            PRODUCTS PAGE
-          </div>
+        <Link href="/" className="hidden lg:block">
+          <div className="text-c-label  text-center ">PRODUCTS PAGE</div>
         </Link>
 
-        <div className="right_side_block hidden md:flex gap-2">
+        <div className="right_side_block hidden md:flex gap-2 ml-auto">
           <Select items={items}>
             <SelectTrigger className="w-45">
               <SelectValue placeholder={role} />
