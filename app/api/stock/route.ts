@@ -1,13 +1,12 @@
 import { requireUserId } from "@/lib/auth/require-user";
-import {
-  getCompanyId,
-  getProductForCompany,
-} from "@/services/products.service";
+import { getProductForCompany } from "@/services/products.service";
 import { NextResponse } from "next/server";
 import z, { ZodError } from "zod";
 import { NotFoundError } from "@/lib/errors/errors";
 import { addToInventory } from "@/services/inventory.service";
 import { updateProductQuantity } from "@/services/inventory.service";
+import { getTransactionsbyProduct } from "@/services/inventory.service";
+import { getCompanyId } from "@/services/profiles.service";
 
 export async function POST(request: Request) {
   try {
@@ -115,5 +114,69 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     );
+  }
+}
+
+export async function GET(request: Request) {
+  // AUTHENTIFICATION
+  requireUserId();
+
+  try {
+    const url = new URL(request.url);
+    const productId = z
+      .string()
+      .uuid()
+      .parse(url.searchParams.get("productId"));
+    const page = z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(1)
+      .parse(url.searchParams.get("page"));
+    const perPage = z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(10)
+      .parse(url.searchParams.get("perPage"));
+    const column = z
+      .enum(["date", "quantity", "type"])
+      .default("date")
+      .parse(url.searchParams.get("column"));
+    const order = z
+      .enum(["asc", "desc"])
+      .default("desc")
+      .parse(url.searchParams.get("order"));
+
+    // db call for data and return
+    const transactions = await getTransactionsbyProduct(
+      productId,
+      perPage,
+      (page - 1) * perPage,
+      order,
+      column,
+    );
+
+    return NextResponse.json(
+      {
+        data: transactions,
+        error: null,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: { code: "VALIDATION_ERROR", message: "wrong data format" },
+        },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({
+      data: null,
+      error: { code: "Internal_ERROR", message: "Internal server error" },
+    });
   }
 }
