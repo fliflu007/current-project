@@ -103,7 +103,7 @@ export function StockMovementDialog({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
-            <Button variant="outline">
+            <Button className="w-full" variant="outline">
               {type} {type === "IN" ? "+" : "-"}
             </Button>
           }

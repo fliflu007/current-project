@@ -20,15 +20,15 @@ export default function ProductCard({ product }: { product: ProductCardType }) {
 
   function sendToDetails(e: React.MouseEvent<HTMLDivElement>) {
     e.stopPropagation();
-    console.log("send to detail");
+
     router.push(`/products/${product.id}`);
   }
 
   return (
     <div onClick={sendToDetails}>
-      <Card className="w-full px-6 sm:flex sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="relative h-16 w-16 shrink-0">
+      <Card className="w-full px-6 flex flex-row items-center justify-between">
+        <div className="flex flex-col-reverse sm:flex-row items-center gap-4">
+          <div className="relative h-24 w-24 sm:h-20 sm:w-20 shrink-0">
             <Image
               src={product.mainImageUrl ?? "/placeholder.png"}
               alt={product.name}
@@ -38,19 +38,25 @@ export default function ProductCard({ product }: { product: ProductCardType }) {
             />
           </div>
           <div>
-            <CardTitle className="whitespace-nowrap">
-              Product Name: <span>{product.name}</span>
+            <CardTitle className="flex flex-col gap-1 mb-2">
+              <span className="text-xs font-normal text-muted-foreground">
+                Product Name:
+              </span>
+              <span className="text-base font-semibold">{product.name}</span>
             </CardTitle>
 
-            <CardDescription>
-              Details:
-              <br />
-              <span>{product.description}</span>
+            <CardDescription className="flex flex-col gap-1">
+              <span className="text-xs font-normal text-muted-foreground">
+                Details:
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {product.description || "No description available."}
+              </span>
             </CardDescription>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 ">
           <p className="whitespace-nowrap text-sm font-medium">
             Stock: {product.quantity}
           </p>
