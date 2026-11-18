@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+import { cache } from "react";
 
 export async function requireUser() {
   const supabase = await createClient();
@@ -37,3 +38,5 @@ export async function requireUserId() {
   }
   return data.user.id;
 }
+
+export const requireUserIdCached = cache(requireUserId);

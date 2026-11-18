@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { InternalServerError } from "../api/api.error";
+import { cache } from "react";
 
 export async function requireUserContext(userId: string) {
   const [profile] = await db
@@ -19,3 +20,4 @@ export async function requireUserContext(userId: string) {
 
   return profile;
 }
+export const requireUserContextCached = cache(requireUserContext);
