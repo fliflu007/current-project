@@ -1,4 +1,8 @@
+import { inventoryMovements } from "@/db/schema";
 import z from "zod";
+
+
+export type InventoryMovementDB =  typeof inventoryMovements.$inferSelect;
 
 export const inventoryInputSchema = z.object({
   productId: z.string().min(5),
