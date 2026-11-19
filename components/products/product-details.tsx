@@ -18,13 +18,15 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import ProductDeleteDialog from "./product-delete-dialog";
-import { ProductDetailUI } from "@/app/products/[id]/type";
-import { deleteByIdAction } from "@/app/products/[id]/action";
+import { deleteByIdAction } from "@/app/(dashboard)/products/actions/action";
+import { ProductDetailUI } from "@/app/(dashboard)/products/[id]/type";
 
 export default function ProductDetails({
   productDetail,
+  role,
 }: {
   productDetail: ProductDetailUI;
+  role: UserRole;
 }) {
   console.log(
     "ProductDetails executed:",
@@ -32,12 +34,16 @@ export default function ProductDetails({
   );
   return (
     <div className="flex w-full justify-center md:block md:w-fit">
-      <Card className="w-full max-w-sm shadow-md">
+      <Card className="w-full max-w-sm shadow-md bg-gray-50">
         <CardHeader>
-          <CardTitle>Product name : {productDetail.data.name}</CardTitle>
-          <CardDescription>
-            Details:<br></br>
-            {productDetail.data.description}
+          <CardTitle>
+            <div className="font-light"> Product: </div>
+            {productDetail.data.name}
+          </CardTitle>
+          <br></br>
+          <CardDescription className="font-bold">
+            <div className="font-light"> Details: </div>
+            {productDetail.data.description || <p>No description available.</p>}
           </CardDescription>
         </CardHeader>
 
@@ -86,16 +92,19 @@ export default function ProductDetails({
               </div>
             </Carousel>
             <div className="mt-2">
-              <Link href={`/products/${productDetail.data.id}/edit`}>
-                <Button variant="secondary">
-                  <Pencil />
-                  Edit
-                </Button>
-              </Link>
-
-              <ProductDeleteDialog
-                onConfirm={() => deleteByIdAction(productDetail.data.id)}
-              ></ProductDeleteDialog>
+              {role === "admin" && (
+                <div>
+                  <Link href={`/products/${productDetail.data.id}/edit`}>
+                    <Button variant="secondary">
+                      <Pencil />
+                      Edit
+                    </Button>
+                  </Link>
+                  <ProductDeleteDialog
+                    onConfirm={() => deleteByIdAction(productDetail.data.id)}
+                  ></ProductDeleteDialog>
+                </div>
+              )}
             </div>
           </div>
         </div>

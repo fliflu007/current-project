@@ -6,18 +6,19 @@ import { useState } from "react";
 import { useMediaQuery } from "@/hook/use-media-query";
 import ProductDetails from "./product-details";
 import MovementHistoryTable from "./movement-history-table";
-
-import { ProductDetailUI } from "@/app/products/[id]/type";
+import { ProductDetailUI } from "@/app/(dashboard)/products/[id]/type";
 import { InventoryMovementDB } from "@/schemas/inventory";
 
 export default function ProductDetailViewer({
   productDetail,
   historicalMovements,
   perpage,
+  role,
 }: {
   productDetail: ProductDetailUI;
   historicalMovements: InventoryMovementDB[];
   perpage: number;
+  role: UserRole;
 }) {
   const [view, setView] = useState<"detail" | "inventory">("detail");
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -47,7 +48,7 @@ export default function ProductDetailViewer({
 
       <div className="md:flex md:mx-auto md:gap-6 max-w-7xl ">
         <div className={cn(isMobile && view !== "detail" && "hidden")}>
-          <ProductDetails productDetail={productDetail} />
+          <ProductDetails productDetail={productDetail} role={role} />
         </div>
         <div
           className={cn(
