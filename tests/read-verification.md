@@ -5,11 +5,11 @@
 | Test                | Expected Result                                                   | Status     |
 | ------------------- | ----------------------------------------------------------------- | ---------- |
 | Open product list   | Products belonging to the current company are displayed           | passed     |
-| Product information | Product name and quantity are displayed correctly                 | To Fix     |
-| Product images      | Correct product images are displayed                              | pass       |
-| Empty product list  | Appropriate empty-state message is displayed                      | Not tested |
-| Pagination          | Moving between pages displays the correct products                | Not tested |
-| Last page           | No additional products are displayed beyond the available results | Not tested |
+| Product information | Product name and quantity are displayed correctly                 | passed     |
+| Product images      | Correct product images are displayed                              | passed     |
+| Empty product list  | Appropriate empty-state message is displayed                      | passed     |
+| Pagination          | Moving between pages displays the correct products                | passed     |
+| Last page           | No additional products are displayed beyond the available results | Not verify |
 
 ## 2. Product Details
 
