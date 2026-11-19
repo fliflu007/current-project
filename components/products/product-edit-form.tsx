@@ -7,21 +7,22 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
-import { ProductByIdResponse } from "@/app/products/[id]/edit/patch-types-schema";
+import { ProductByIdResponse } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 import {
   PatchProductData,
   patchProductDataSchema,
-} from "@/app/products/[id]/edit/patch-types-schema";
-import ImageSelector from "@/app/products/[id]/edit/image-selector";
+} from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
+import ImageSelector from "@/app/(dashboard)/products/[id]/edit/image-selector";
 
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
-import ImageItem from "@/app/products/[id]/edit/image-item";
+
+import ImageItem from "@/app/(dashboard)/products/[id]/edit/image-item";
 import {
   normalizeProductImages,
   preparePatchFormData,
-} from "@/app/products/[id]/edit/patch-form-utils";
-import { ProductImage } from "@/app/products/[id]/edit/patch-types-schema";
+} from "@/app/(dashboard)/products/[id]/edit/patch-form-utils";
+import { ProductImage } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 import { useState } from "react";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
