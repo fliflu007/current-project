@@ -1,12 +1,13 @@
 "use server";
 
-import { requireUserId } from "@/lib/auth/require-user";
+import { requireUserId, requireUserIdCached } from "@/lib/auth/require-user";
 
 import { db } from "@/db";
 import { inventoryMovements, productImages, profiles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { products } from "@/db/schema";
 import { deleteImage } from "@/lib/cloudinary/operations";
+import { requireUserContext } from "@/lib/auth/require-user-context";
 
 export async function deleteByIdAction(
   id: string,
@@ -16,21 +17,11 @@ export async function deleteByIdAction(
   if (!userid) {
     return { error: "authentification error" };
   }
+  const { role, companyId } = await requireUserContext(userid);
 
-  // get the company ID
-  const result = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.id, userid));
-  if (result.length === 0) {
-    return { error: "not company assigned to user" };
+  if (role !== "admin") {
+    return { error: "not admin, can not delete product" };
   }
-  // would be for role later
-  const role = result[0].role;
-  if (role != "admin") {
-    return { error: "not allowded" };
-  }
-  const companyId = result[0].companyId;
 
   // transation Tx :
   try {
