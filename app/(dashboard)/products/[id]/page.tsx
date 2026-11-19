@@ -1,7 +1,6 @@
-import Navbar from "@/components/navigation/navbar";
 import ProductToolbar from "@/components/products/product-toolbar";
 import ProductViewer from "@/components/products/product-detail-viewer";
-import { requireUserId } from "@/lib/auth/require-user";
+import { requireUserIdCached } from "@/lib/auth/require-user";
 import { redirect, notFound } from "next/navigation";
 import z from "zod";
 import { db } from "@/db";
@@ -11,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { productImages } from "@/db/schema";
 import { ProductDetailUI } from "./type";
 import { inventoryMovements } from "@/db/schema";
+import { requireUserContextCached } from "@/lib/auth/require-user-context";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -19,11 +19,13 @@ type PageProps = {
 export default async function page({ params }: PageProps) {
   const idParam = await params;
 
-  const user = await requireUserId();
-  console.log(user);
+  const user = await requireUserIdCached();
   if (user === null) {
     redirect("/login");
   }
+
+  const { companyId, role } = await requireUserContextCached(user);
+  const typedRole = role as UserRole;
 
   const product = idParam.id;
 
@@ -32,17 +34,6 @@ export default async function page({ params }: PageProps) {
   if (!productId.success) {
     notFound();
   }
-
-  // 3. Get the user's company ID // to make sure it should be accessible.
-  const result = await db
-    .select({ companyId: profiles.companyId })
-    .from(profiles)
-    .where(eq(profiles.id, user));
-
-  if (result.length === 0) {
-    throw new Error("USer not associated to any company");
-  }
-  const companyId = result[0].companyId;
 
   const productdata = await db
     .select()
@@ -53,10 +44,7 @@ export default async function page({ params }: PageProps) {
   if (productdata.length === 0) {
     notFound();
   }
-
   const product1 = productdata[0];
-  console.log("product data : ", productdata);
-  console.log("company id", companyId);
 
   const images = await db
     .select()
@@ -66,7 +54,7 @@ export default async function page({ params }: PageProps) {
   if (images.length == 0) {
     // Unexpected Error Every product must have at least ONE IMAGE
     // Might be Adjusted later
-    throw new Error("Product image not found");
+    notFound();
   }
 
   // 6.  NOT FOR NOW => Fetch the product's movement history
@@ -79,11 +67,9 @@ export default async function page({ params }: PageProps) {
 
   // 7. Pass the data to the display components
   const productDetail: ProductDetailUI = { data: product1, images: images };
-  console.log(productDetail);
 
   return (
     <div>
-      <Navbar isLoggedIn={true} />
       <div className="mb-8">
         <ProductToolbar></ProductToolbar>
       </div>
@@ -91,6 +77,7 @@ export default async function page({ params }: PageProps) {
         productDetail={productDetail}
         historicalMovements={historicalMovements}
         perpage={perpage}
+        role={typedRole}
       />
     </div>
   );
