@@ -1,14 +1,12 @@
-import Navbar from "@/components/navigation/navbar";
 import ProductUtilityBar from "@/components/products/product-utility-bar";
 import ProductCard from "@/components/products/product-card";
 import ProductToolbar from "@/components/products/product-toolbar";
-import { requireUserId } from "@/lib/auth/require-user";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import z from "zod";
 import { eq, and, inArray, count, ilike } from "drizzle-orm";
 import { products, productImages } from "@/db/schema";
-import { requireUserContext } from "@/lib/auth/require-user-context";
+import { requireUserContextCached } from "@/lib/auth/require-user-context";
+import { requireUserIdCached } from "@/lib/auth/require-user";
 
 type PageProps = {
   searchParams: Promise<{
@@ -20,13 +18,11 @@ type PageProps = {
 const pageSize = 10;
 
 export default async function Page({ searchParams }: PageProps) {
-  // if not will be undefined.
   const params = await searchParams;
-  const user = await requireUserId();
-  if (!user) {
-    redirect("/login");
-  }
-  const { companyId, role } = await requireUserContext(user);
+
+  const user = await requireUserIdCached();
+
+  const { companyId, role } = await requireUserContextCached(user as string);
 
   const pageParam = z.coerce.number().int().positive().safeParse(params.page);
   let page: number;
@@ -109,7 +105,6 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <div>
-      <Navbar role={role as "admin" | "staff" | "viewer"} />
       <ProductToolbar />
 
       <div className="container mx-auto">
