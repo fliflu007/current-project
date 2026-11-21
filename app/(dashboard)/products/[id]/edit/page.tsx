@@ -6,6 +6,7 @@ import {
   getProductById,
   getProductImageData,
 } from "@/services/products.service";
+import z from "zod";
 
 export default async function Page({
   params,
@@ -23,8 +24,14 @@ export default async function Page({
   // fetch all data and show in console.
   const { id } = await params;
 
+  const parsedId = z.string().uuid().safeParse(id);
+
+  if (!parsedId.success) {
+    notFound();
+  }
+
   // fetch product
-  const productData = await getProductById(id, companyId);
+  const productData = await getProductById(parsedId.data, companyId);
 
   if (!productData) {
     notFound();
