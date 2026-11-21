@@ -1,12 +1,12 @@
 import { ValidationError } from "@/lib/errors/errors";
-import { patchProductDataApiSchema } from "@/app/products/[id]/edit/patch-types-schema";
+import { patchProductDataApiSchema } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 
 import {
   existingImagesSchema,
   newImagesSchema,
   type NewImagesType,
   type ExistingImageInput,
-} from "@/app/products/[id]/edit/patch-types-schema";
+} from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 import { validateImageFile } from "@/app/validation/product-image";

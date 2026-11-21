@@ -1,5 +1,3 @@
-import { validationError } from "@/lib/api/response";
-
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/constants/products";
 import { ValidationError } from "@/lib/errors/errors";
 
