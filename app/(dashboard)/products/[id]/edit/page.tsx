@@ -1,40 +1,43 @@
 import ProductEditForm from "@/components/products/product-edit-form";
-
-import Navbar from "@/components/navigation/navbar";
-
-import { notFound } from "next/navigation";
-
-import { ProductByIdResponse } from "./patch-types-schema";
+import { notFound, redirect } from "next/navigation";
+import { requireUserIdCached } from "@/lib/auth/require-user";
+import { requireUserContextCached } from "@/lib/auth/require-user-context";
+import {
+  getProductById,
+  getProductImageData,
+} from "@/services/products.service";
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  /// auth
+  const userId = await requireUserIdCached();
+  // authorisation
+  const { role, companyId } = await requireUserContextCached(userId as string);
+  if (role !== "admin") {
+    redirect("/dashboard");
+  }
+
   // fetch all data and show in console.
   const { id } = await params;
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/product/${id}`,
-  );
+  // fetch product
+  const productData = await getProductById(id, companyId);
 
-  if (response.status === 404) {
+  if (!productData) {
     notFound();
   }
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch product");
-  }
-
-  const result: { data: ProductByIdResponse } = await response.json();
-  const product = result.data;
-  console.log("PRODUCT", product);
+  // get all image Data
+  const productImages = await getProductImageData(id);
+  // normalise for component
+  const product = { ...productData, images: productImages };
 
   return (
     <div className="flex min-h-screen flex-col">
       <div>
-        <Navbar />
-
         <main className="flex flex-1 my-10 justify-center">
           <div className="w-136 overflow-visible">
             <ProductEditForm product={product} />
