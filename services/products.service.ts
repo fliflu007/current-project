@@ -2,11 +2,10 @@ import { products } from "@/db/schema";
 import { CreateProductInput } from "@/schemas/product";
 import { db } from "@/db";
 import { eq, and } from "drizzle-orm";
-
 import { productImages, inventoryMovements } from "@/db/schema";
 import { ConflictError } from "@/lib/errors/errors";
 import { CreateProductData } from "@/schemas/product";
-import { PatchProductDataApi } from "@/app/products/[id]/edit/patch-types-schema";
+import { PatchProductDataApi } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 import { NotFoundError } from "@/lib/errors/errors";
 
 export async function insertProductDb(
@@ -97,8 +96,11 @@ export async function getProducts(companyId: string) {
   }));
 }
 
-export async function getProductById(id: string) {
-  const data = await db.select().from(products).where(eq(products.id, id));
+export async function getProductById(id: string, companyId: string) {
+  const data = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.id, id), eq(products.companyId, companyId)));
 
   if (!data[0]) {
     return null;
@@ -151,88 +153,6 @@ export async function updateProductDetails(
 
   return updatedProducts;
 }
-
-/**
- * Returns a list of existing images that were erased.
- * Returns [] when no existing images were erased.
- */
-// export async function updateExistingImages(
-//   productId: string,
-//   normalisedImages: NormalizedImages,
-// ) {
-//   // 1. Get all current image records from DB
-//   const dbImageList = await db
-//     .select()
-//     .from(productImages)
-//     .where(eq(productImages.productId, productId));
-//   // OK RETURN WELL
-
-//   // check if all existing images inside the normalized image do exist in DB
-//   for (const item of normalisedImages) {
-//     if (item.status === "existing") {
-//       const found = dbImageList.some(
-//         (dbimage) => dbimage.publicId === item.publicId,
-//       );
-//       if (!found) {
-//         throw new ValidationError(
-//           "The existing image provided was not found in the database",
-//         );
-//       }
-//     }
-//   }
-//   // check every extraline DB out of my list and make a LIST ready for erase
-//   const toEraseList = dbImageList.filter((dbimage) => {
-//     return !normalisedImages.some((item) => item.publicId === dbimage.publicId);
-//   });
-
-//   /////// ERASE LIST READY
-
-//   // 7. Delete those images from Cloudinary
-//   for (const imagetoerase of toEraseList) {
-//     const result = await deleteImage(imagetoerase.publicId);
-//     if (result.deleted === false) {
-//       throw new Error("Failed to delete image from Cloudinary");
-//     }
-//   }
-
-//   // 8. Delete those image records from DB
-//   if (toEraseList.length > 0) {
-//     const publicIdsToDelete = toEraseList.map((image) => image.publicId);
-
-//     await db
-//       .delete(productImages)
-//       .where(inArray(productImages.publicId, publicIdsToDelete));
-//   }
-//   return toEraseList;
-// }
-
-// export async function updateNewImages(
-//   productId: string,
-//   normalisedImages: NormalizedImages,
-// ) {
-//   // ADDING CLOUDINARY
-//   const addedImages: {
-//     url: string;
-//     publicId: string;
-//   }[] = [];
-
-//   for (const newimage of normalisedImages) {
-//     if (newimage.status === "new") {
-//       const addedImage = await uploadImageToCloudinary(newimage.file);
-//       addedImages.push(addedImage);
-//     }
-//   }
-//   if (addedImages.length > 0) {
-//     const result = await db.transaction(async (tx) => {
-//       for (const image of addedImages) {
-//         await tx.insert(productImages).values({
-//           ...image,
-//           productId,
-//         });
-//       }
-//     });
-//   }
-// }
 
 export async function setPrimaryImage(imageId: string) {
   const result = await db
