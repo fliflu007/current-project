@@ -1,11 +1,12 @@
 import z from "zod";
 import { NextRequest, NextResponse } from "next/server";
-import { ValidationError } from "@/lib/errors/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors/errors";
 import { validatePatchRequest } from "./patch-validation";
 
 import {
   deleteImageDB,
   getProductById,
+  getProductForCompany,
   getProductImageData,
   setPrimaryImageByPublicID,
 } from "@/services/products.service";
@@ -19,12 +20,14 @@ import { updateProductDetails } from "@/services/products.service";
 
 import { getImagesToRemove } from "./helper";
 import {
+  forbiddenResponse,
   notFoundResponse,
   profileNotFoundResponse,
   unauthorizedResponse,
 } from "@/lib/api/response";
 import { requireUserId } from "@/lib/auth/require-user";
 import { requireUserContext } from "@/lib/auth/require-user-context";
+import { getCompanyId } from "@/services/profiles.service";
 
 export async function GET(
   request: Request,
@@ -116,15 +119,27 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  // auth
   try {
     const { id } = await params;
 
-    const formdata = await request.formData();
+    const userId = await requireUserId();
 
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
+    const { companyId, role } = await requireUserContext(userId);
+
+    if (role != "admin") {
+      return forbiddenResponse();
+    }
+
+    // TENANT CHECK this throw an error if fail we do not need return
+    getProductForCompany(id, companyId);
+
+    const formdata = await request.formData();
     const cleanRequest = await validatePatchRequest(formdata, id);
 
-    /// OPERATION //
     const imagesInDB = await getProductImageData(id);
 
     // Undefined here is not filed AT first So no Operation on them
@@ -150,6 +165,7 @@ export async function PATCH(
       publicId: string;
       isPrimary: boolean;
     }[] = [];
+
     for (const image of imagesToAdd) {
       const result = await uploadImageToCloudinary(image.file);
       newImageCloudData.push({ ...result, isPrimary: image.isPrimary });
@@ -170,6 +186,7 @@ export async function PATCH(
       })),
       id,
     );
+
     // SET PRIMARY ////////
     // find it:
     const existingPrimary = cleanRequest.existingImages?.find(
@@ -184,7 +201,7 @@ export async function PATCH(
       await setPrimaryImageByPublicID(newPrimary?.publicId, id);
     }
 
-    // C remove unwanted existing image records DB
+    // remove unwanted existing image records DB
     if (imagesToRemove.length > 0) {
       for (const currentImage of imagesToRemove) {
         await deleteImageDB(currentImage.publicId);
@@ -214,6 +231,10 @@ export async function PATCH(
         },
         { status: 400 },
       );
+    }
+
+    if (error instanceof NotFoundError) {
+      return notFoundResponse("Product not found");
     }
     if (error instanceof z.ZodError) {
       const message = error.issues[0]?.message;
