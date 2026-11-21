@@ -28,17 +28,18 @@ import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";
 
-// COMPONENT
 export default function ProductEditForm({
   product,
 }: {
   product: ProductByIdResponse;
 }) {
+  // Normalize image data into an array ready for preview
   const normalizedImages = normalizeProductImages(product.images);
 
   const [images, setImages] = useState<ProductImage[]>(normalizedImages);
   const [errorApi, setErrorApi] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
   const form = useForm<PatchProductData>({
     resolver: zodResolver(patchProductDataSchema),
     mode: "onChange",
@@ -55,8 +56,6 @@ export default function ProductEditForm({
     try {
       const formData = preparePatchFormData(images);
       formData.append("data", JSON.stringify(data));
-
-      console.log([...formData.entries()]);
 
       const response = await fetch(`/api/product/${product.id}`, {
         method: "PATCH",
@@ -78,6 +77,8 @@ export default function ProductEditForm({
       setSubmitting(false);
     }
   }
+
+  // IMAGE INPUT FUNCTIONS
 
   function removeImage(imageToRemove: ProductImage) {
     setImages((prev) => {
