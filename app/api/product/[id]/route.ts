@@ -18,29 +18,37 @@ import { deleteImage } from "@/lib/cloudinary/operations";
 import { updateProductDetails } from "@/services/products.service";
 
 import { getImagesToRemove } from "./helper";
+import {
+  notFoundResponse,
+  profileNotFoundResponse,
+  unauthorizedResponse,
+} from "@/lib/api/response";
+import { requireUserId } from "@/lib/auth/require-user";
+import { requireUserContext } from "@/lib/auth/require-user-context";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // ADD authentification here
+  const user = await requireUserId();
+
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
+  const { companyId } = await requireUserContext(user);
+
   try {
     // Get product ID
     const { id } = await params;
 
     // Call service
-    const productData = await getProductById(id);
+    const productData = await getProductById(id, companyId);
 
     // Product not found
     if (productData === null) {
-      return Response.json(
-        {
-          data: null,
-          error: {
-            code: "NOT_FOUND",
-            message: "Product not found",
-          },
-        },
-        { status: 404 },
-      );
+      return notFoundResponse("product not found ");
     }
 
     // get all image Data
