@@ -1,4 +1,4 @@
-import { ValidationError } from "@/lib/api/errors/errors";
+import { ValidationError } from "@/lib/api/errors";
 import { imageDataSchema } from "@/schemas/product";
 import { validateImageFile } from "@/app/validation/product-image";
 import { MAX_PRODUCT_IMAGES } from "@/constants/products";

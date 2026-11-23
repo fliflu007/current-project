@@ -1,8 +1,9 @@
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { InternalServerError } from "../api/api.error";
+
 import { cache } from "react";
+import { InternalServerError } from "../api/errors";
 
 export async function requireUserContext(userId: string) {
   const [profile] = await db
