@@ -1,27 +1,25 @@
-# Create Product Verification
+# 01 — CREATE Product Verification
 
-## 1. Expected Behaviour
+**Feature:** Create a new product
 
-- Product can be created.
-- Required fields are validated.
-- Product is saved in the database.
-- Images are uploaded correctly.
+## 1. Manual Verification
 
-## 2. Manual Verification
+| Check                                          | Result |
+| ---------------------------------------------- | ------ |
+| Valid product creation                         | PASS   |
+| Required fields are validated                  | PASS   |
+| Invalid quantity is rejected                   | PASS   |
+| Unauthenticated request is rejected            | PASS   |
+| Product is associated with the current company | PASS   |
+| Product appears correctly in the product list  | PASS   |
+| Product images upload correctly                | PASS   |
+| Duplicate product name displays an error       | PASS   |
 
-| Check                   | Status | Notes |
-| ----------------------- | ------ | ----- |
-| Valid product creation  | PASS   |       |
-| Missing required fields | PASS   |       |
-| Invalid quantity        | PASS   |       |
-| Unauthenticated request | PASS   |       |
-| Company association     | PASS   |       |
-| Product appears in list | PASS   |       |
-| Image upload            | PASS   |       |
+## 2. Automated Verification — Vitest
 
-## 3. Automated Verification (Vitest) => CHECK file
+### A. Zod Schema Validation
 
-| Automated Test                 | Expected Behaviour | Result |
+| Test                           | Expected Behaviour | Result |
 | ------------------------------ | ------------------ | ------ |
 | Valid product data             | Accept validation  | PASS   |
 | Name shorter than 3 characters | Reject validation  | PASS   |
@@ -29,11 +27,11 @@
 | Negative quantity              | Reject validation  | PASS   |
 | Missing required name          | Reject validation  | PASS   |
 
-## 4. Automated API Behaviour Tests
+**Result: 5 tests passed.**
 
-[View CREATE API tests](../../tests/products/create.product.api.test.ts)
+### B. CREATE API Route Tests
 
-**Result: 7 tests passed**
+**Test file:** `tests/products/create.product.api.test.ts`
 
 | Test                         | Expected Result           | Status |
 | ---------------------------- | ------------------------- | ------ |
@@ -45,19 +43,33 @@
 | Missing image data           | 400 Validation Error      | PASS   |
 | Unexpected database error    | 500 Internal Server Error | PASS   |
 
-## 5. Issues Discovered
+**Result: 7 tests passed.**
 
-- None
+## 3. Testing Summary
 
-## 6. Fixes Applied
+| Testing Method          | Purpose                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| Frontend manual testing | Verify user experience and frontend validation                                      |
+| Postman API testing     | Verify API responses and behaviour during development                               |
+| Vitest schema tests     | Verify Zod validation rules automatically                                           |
+| Vitest API route tests  | Verify authentication, authorization, validation, business rules and error handling |
 
-- None
+## 4. Issues Discovered
 
-## 7. Final Result
+- None currently recorded.
+
+## 5. Fixes Applied
+
+- None currently recorded.
+
+## 6. Final Result
 
 **Status: PASS**
 
 - Manual verification: PASS
-- Automated verification (Vitest): PASS
+- Automated schema validation: PASS (5 tests)
+- Automated API route testing: PASS (7 tests)
 
-Create Product has passed the documented manual checks and existing automated validation tests.
+**Total: 12 automated tests passed, plus manual verification.**
+
+Create Product has passed the documented manual checks and automated tests.
