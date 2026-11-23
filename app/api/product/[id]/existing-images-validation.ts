@@ -1,5 +1,5 @@
-import { ValidationError } from "@/lib/errors/errors";
-import { type ExistingImageInput } from "@/app/products/[id]/edit/patch-types-schema";
+import { ValidationError } from "@/lib/api/errors";
+import { type ExistingImageInput } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { productImages } from "@/db/schema";

@@ -1,5 +1,5 @@
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/constants/products";
-import { ValidationError } from "@/lib/errors/errors";
+import { ValidationError } from "@/lib/api/errors";
 
 import z from "zod";
 

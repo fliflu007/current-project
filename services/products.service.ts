@@ -3,10 +3,10 @@ import { CreateProductInput } from "@/schemas/product";
 import { db } from "@/db";
 import { eq, and } from "drizzle-orm";
 import { productImages, inventoryMovements } from "@/db/schema";
-import { ConflictError } from "@/lib/errors/errors";
+import { ConflictError } from "@/lib/api/errors";
 import { CreateProductData } from "@/schemas/product";
 import { PatchProductDataApi } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
-import { NotFoundError } from "@/lib/errors/errors";
+import { NotFoundError } from "@/lib/api/errors";
 
 export async function insertProductDb(
   productData: CreateProductData,

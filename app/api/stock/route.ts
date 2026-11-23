@@ -2,7 +2,7 @@ import { requireUserId } from "@/lib/auth/require-user";
 import { getProductForCompany } from "@/services/products.service";
 import { NextResponse } from "next/server";
 import z, { ZodError } from "zod";
-import { NotFoundError } from "@/lib/errors/errors";
+import { NotFoundError } from "@/lib/api/errors/errors";
 import { addToInventory } from "@/services/inventory.service";
 import { updateProductQuantity } from "@/services/inventory.service";
 import { getTransactionsbyProduct } from "@/services/inventory.service";

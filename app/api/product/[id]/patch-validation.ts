@@ -1,4 +1,4 @@
-import { ValidationError } from "@/lib/errors/errors";
+import { ValidationError } from "@/lib/api/errors";
 import { patchProductDataApiSchema } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 
 import {
@@ -20,6 +20,7 @@ export async function validatePatchRequest(formdata: FormData, id: unknown) {
     .string()
     .uuid({ message: "Invalid product ID" })
     .parse(id);
+
   const dataRaw = formdata.get("data");
   const existingImagesRaw = formdata.get("existingImages");
   const newImagesRaw = formdata.get("newImages");

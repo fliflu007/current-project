@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/auth/require-user";
 import { products } from "@/db/schema";
-import { ValidationError, ConflictError } from "@/lib/errors/errors";
+import { ValidationError, ConflictError } from "@/lib/api/errors/errors";
 import { createProductDataSchema } from "@/schemas/product";
 import z from "zod";
 import { validateProductImages } from "./validation";
