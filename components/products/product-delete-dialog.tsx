@@ -20,8 +20,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+import { DeleteActionResult } from "@/app/(dashboard)/products/actions/action";
+
 export type ProductDeleteDialogProps = {
-  onConfirm: () => Promise<{ error?: string }>;
+  onConfirm: () => Promise<DeleteActionResult>;
 };
 
 export default function ProductDeleteDialog({
@@ -35,12 +37,12 @@ export default function ProductDeleteDialog({
   async function handleDelete() {
     setError("");
     setPending(true);
-    console.log("deletetrigger");
     try {
       const result = await onConfirm();
-      if (result.error) {
-        console.log("error delelete action :", result?.error);
-        throw new Error("deletion issue");
+      if (!result.success) {
+        toast.error(result.error);
+        console.log(result.error);
+        return;
       }
 
       toast.success("Product deleted successfully");
