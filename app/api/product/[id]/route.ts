@@ -79,49 +79,6 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-
-  try {
-    const result = await deleteProduct(id);
-    if (result !== null) {
-      return Response.json({ data: result, error: null }, { status: 200 });
-    }
-    return Response.json(
-      {
-        data: null,
-        error: { code: "NOT_FOUND", message: "product does not exist" },
-      },
-      { status: 404 },
-    );
-  } catch (error) {
-    return Response.json(
-      {
-        data: null,
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "something went wrong",
-        },
-      },
-      { status: 500 },
-    );
-  }
-}
-
-// Authentication — requireUserId()
-// Authorization — admin-only check
-// Tenant isolation — getProductForCompany()
-// Validation — validatePatchRequest()
-// Resource access — retrieve existing images
-// Business rules — determine which images to add, keep and remove
-// Cloudinary — upload new images
-// Database — update product and image records
-// Cloudinary — delete removed images
-// Error handling — 400, 403, 404, 500, etc.
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
