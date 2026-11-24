@@ -4,14 +4,11 @@ import { NotFoundError, ValidationError } from "@/lib/api/errors";
 import { validatePatchRequest } from "./patch-validation";
 import {
   deleteImageDB,
-  getProductById,
   getProductForCompany,
   getProductImageData,
   setPrimaryImageByPublicID,
 } from "@/services/products.service";
 import { addImagesToDB } from "@/services/products.service";
-
-import { deleteProduct } from "@/services/products.service";
 import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
 import { deleteImage } from "@/lib/cloudinary/operations";
 import { updateProductDetails } from "@/services/products.service";
@@ -24,60 +21,6 @@ import {
 } from "@/lib/api/response";
 import { requireUserId } from "@/lib/auth/require-user";
 import { requireUserContext } from "@/lib/auth/require-user-context";
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  // ADD authentification here
-  const user = await requireUserId();
-
-  if (!user) {
-    return unauthorizedResponse();
-  }
-
-  const { companyId } = await requireUserContext(user);
-
-  try {
-    // Get product ID
-    const { id } = await params;
-
-    // Call service
-    const productData = await getProductById(id, companyId);
-
-    // Product not found
-    if (productData === null) {
-      return notFoundResponse("product not found ");
-    }
-
-    // get all image Data
-    const productImages = await getProductImageData(id);
-    console.log("images", productImages);
-
-    const product = { ...productData, images: productImages };
-
-    // Product found
-    return Response.json(
-      {
-        data: product,
-        error: null,
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    // Unexpected error
-    return Response.json(
-      {
-        data: null,
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong",
-        },
-      },
-      { status: 500 },
-    );
-  }
-}
 
 export async function PATCH(
   request: NextRequest,
