@@ -2,6 +2,10 @@ import z from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { companies, profiles } from "@/db/schema";
+import {
+  internalServerErrorResponse,
+  validationErrorResponse,
+} from "@/lib/api/response";
 
 const registerSchema = z.object({
   companyName: z.string().min(1),
@@ -10,80 +14,103 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: unknown;
 
-  const cleanData = registerSchema.parse(body);
-
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.signUp({
-    email: cleanData.email,
-    password: cleanData.password,
-  });
-
-  if (error || !data.user) {
-    return Response.json(
-      {
-        data: null,
-        error: {
-          code: "AUTH_ERROR",
-          message: "Registration failed",
-        },
-      },
-      { status: 400 },
-    );
+  // 1. Read request body
+  try {
+    body = await request.json();
+  } catch {
+    return validationErrorResponse("Invalid JSON body");
   }
 
-  const [company] = await db
-    .insert(companies)
-    .values({
-      name: cleanData.companyName,
-    })
-    .returning();
+  // 2. Validate request data
+  const cleanData = registerSchema.safeParse(body);
 
-  if (!company) {
-    return Response.json(
-      {
-        data: null,
-        error: {
-          code: "COMPANY_CREATION_FAILED",
-          message: "Company could not be created",
-        },
-      },
-      { status: 500 },
-    );
+  if (!cleanData.success) {
+    return validationErrorResponse("Invalid registration data");
   }
 
-  const [profile] = await db
-    .insert(profiles)
-    .values({
-      id: data.user.id,
-      companyId: company.id,
-      role: "admin",
-    })
-    .returning();
-  if (!profile) {
+  // 3. Register user and create company/profile
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanData.data.email,
+      password: cleanData.data.password,
+    });
+
+    // Supabase returned an authentication error
+    if (error || !data.user) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "AUTH_ERROR",
+            message: "Registration failed",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // 4. Create company
+    const [company] = await db
+      .insert(companies)
+      .values({
+        name: cleanData.data.companyName,
+      })
+      .returning();
+
+    if (!company) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "COMPANY_CREATION_FAILED",
+            message: "Company could not be created",
+          },
+        },
+        { status: 500 },
+      );
+    }
+
+    // 5. Create admin profile
+    const [profile] = await db
+      .insert(profiles)
+      .values({
+        id: data.user.id,
+        companyId: company.id,
+        role: "admin",
+      })
+      .returning();
+
+    if (!profile) {
+      return Response.json(
+        {
+          data: null,
+          error: {
+            code: "PROFILE_CREATION_FAILED",
+            message: "Profile could not be created",
+          },
+        },
+        { status: 500 },
+      );
+    }
+
+    // 6. Registration successful
     return Response.json(
       {
-        data: null,
-        error: {
-          code: "PROFILE_CREATION_FAILED",
-          message: "Profile could not be created",
+        data: {
+          user: data.user,
+          company,
+          profile,
         },
+        error: null,
       },
-      { status: 500 },
+      { status: 201 },
     );
+  } catch {
+    // Unexpected Supabase or database exception
+    return internalServerErrorResponse();
   }
-
-  return Response.json(
-    {
-      data: {
-        user: data.user,
-        company,
-        profile,
-      },
-      error: null,
-    },
-    { status: 201 },
-  );
 }
