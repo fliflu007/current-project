@@ -6,7 +6,8 @@ import { NotFoundError } from "@/lib/api/errors";
 import { addToInventory } from "@/services/inventory.service";
 import { updateProductQuantity } from "@/services/inventory.service";
 import { getTransactionsbyProduct } from "@/services/inventory.service";
-import { getCompanyId } from "@/services/profiles.service";
+import { forbiddenResponse, unauthorizedResponse } from "@/lib/api/response";
+import { requireUserContext } from "@/lib/auth/require-user-context";
 
 export async function POST(request: Request) {
   try {
@@ -15,16 +16,13 @@ export async function POST(request: Request) {
     // AUTHENTIFICATION
     const userId = await requireUserId();
     if (!userId) {
-      return NextResponse.json(
-        {
-          data: null,
-          error: {
-            code: "authentification error",
-            message: "user not authentified",
-          },
-        },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
+    }
+    const { role, companyId } = await requireUserContext(userId);
+
+    // authorisation
+    if (role == "viewer") {
+      return forbiddenResponse();
     }
 
     // Validation ID
@@ -37,9 +35,6 @@ export async function POST(request: Request) {
     const validatedReason = z.string().nullable().optional().parse(data.reason);
 
     const validatedType = z.enum(["IN", "OUT"]).parse(data.type);
-
-    /// user i get id
-    const companyId = await getCompanyId(userId);
 
     // Verife is product -> CompanyID .. throw error
     const productDB = await getProductForCompany(validedId, companyId);
