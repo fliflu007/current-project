@@ -29,11 +29,11 @@ For each feature:
 
 ### 4.1 Login
 
-| Test                                         | Expected result                       | Status     |
-| -------------------------------------------- | ------------------------------------- | ---------- |
-| Login with valid credentials                 | User is authenticated                 | NOT TESTED |
-| Login with invalid credentials               | Login fails and an error is displayed | NOT TESTED |
-| Access protected page without authentication | User is redirected or denied access   | NOT TESTED |
+| Test                                         | Expected result                       | Status |
+| -------------------------------------------- | ------------------------------------- | ------ |
+| Login with valid credentials                 | User is authenticated                 | TESTED |
+| Login with invalid credentials               | Login fails and an error is displayed | TESTED |
+| Access protected page without authentication | User is redirected or denied access   | TESTED |
 
 ### 4.2 API Authentication
 
