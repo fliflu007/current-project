@@ -1,4 +1,4 @@
-import type { ExistingImageInput } from "@/app/products/[id]/edit/patch-types-schema";
+import type { ExistingImageInput } from "@/app/(dashboard)/products/[id]/edit/patch-types-schema";
 
 type ProductImageDB = {
   id: string;
