@@ -144,7 +144,7 @@ beforeEach(() => {
 // API TESTS
 
 describe("Create Product API", () => {
-  it("creates a product successfully and returns 201", async () => {
+  it("creates a product successfully as admin and returns 201", async () => {
     const response = await POST(createRequest());
     const body = await response.json();
 
@@ -152,6 +152,8 @@ describe("Create Product API", () => {
     expect(body.error).toBeNull();
     expect(body.data.product.id).toBe("test-product-id");
     expect(body.data.product.companyId).toBe("test-company-id");
+
+    expect(requireUserContext).toHaveBeenCalledWith("test-user-id");
 
     expect(insertProductDb).toHaveBeenCalledWith(
       productData,
@@ -172,7 +174,9 @@ describe("Create Product API", () => {
     expect(body.data).toBeNull();
     expect(body.error.code).toBe("UNAUTHORIZED");
 
+    expect(requireUserContext).not.toHaveBeenCalled();
     expect(insertProductDb).not.toHaveBeenCalled();
+    expect(uploadImageToCloudinary).not.toHaveBeenCalled();
   });
 
   it("rejects staff users with 403 FORBIDDEN", async () => {
@@ -189,6 +193,24 @@ describe("Create Product API", () => {
     expect(body.error.code).toBe("FORBIDDEN");
 
     expect(insertProductDb).not.toHaveBeenCalled();
+    expect(uploadImageToCloudinary).not.toHaveBeenCalled();
+  });
+
+  it("rejects viewer users with 403 FORBIDDEN", async () => {
+    vi.mocked(requireUserContext).mockResolvedValue({
+      companyId: "test-company-id",
+      role: "viewer",
+    });
+
+    const response = await POST(createRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.data).toBeNull();
+    expect(body.error.code).toBe("FORBIDDEN");
+
+    expect(insertProductDb).not.toHaveBeenCalled();
+    expect(uploadImageToCloudinary).not.toHaveBeenCalled();
   });
 
   it("rejects invalid product data with 400 VALIDATION_ERROR", async () => {
