@@ -1,8 +1,7 @@
 import z from "zod";
 import { NextRequest, NextResponse } from "next/server";
-import { NotFoundError, ValidationError } from "@/lib/errors/errors";
+import { NotFoundError, ValidationError } from "@/lib/api/errors";
 import { validatePatchRequest } from "./patch-validation";
-
 import {
   deleteImageDB,
   getProductById,
@@ -15,19 +14,16 @@ import { addImagesToDB } from "@/services/products.service";
 import { deleteProduct } from "@/services/products.service";
 import { uploadImageToCloudinary } from "@/lib/cloudinary/operations";
 import { deleteImage } from "@/lib/cloudinary/operations";
-
 import { updateProductDetails } from "@/services/products.service";
-
 import { getImagesToRemove } from "./helper";
 import {
   forbiddenResponse,
+  internalServerErrorResponse,
   notFoundResponse,
-  profileNotFoundResponse,
   unauthorizedResponse,
 } from "@/lib/api/response";
 import { requireUserId } from "@/lib/auth/require-user";
 import { requireUserContext } from "@/lib/auth/require-user-context";
-import { getCompanyId } from "@/services/profiles.service";
 
 export async function GET(
   request: Request,
@@ -115,6 +111,17 @@ export async function DELETE(
   }
 }
 
+// Authentication — requireUserId()
+// Authorization — admin-only check
+// Tenant isolation — getProductForCompany()
+// Validation — validatePatchRequest()
+// Resource access — retrieve existing images
+// Business rules — determine which images to add, keep and remove
+// Cloudinary — upload new images
+// Database — update product and image records
+// Cloudinary — delete removed images
+// Error handling — 400, 403, 404, 500, etc.
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -135,7 +142,7 @@ export async function PATCH(
     }
 
     // TENANT CHECK this throw an error if fail we do not need return
-    getProductForCompany(id, companyId);
+    await getProductForCompany(id, companyId);
 
     const formdata = await request.formData();
     const cleanRequest = await validatePatchRequest(formdata, id);
@@ -250,6 +257,9 @@ export async function PATCH(
         { status: 400 },
       );
     }
-    throw error;
+    // Unexpected errors: database, Cloudinary, etc.
+    console.error("PATCH product error:", error);
+
+    return internalServerErrorResponse();
   }
 }
