@@ -40,19 +40,19 @@ export function StockMovementDialog({
 
   console.log("prop:", type);
   const [reason, setReason] = useState<string | null>(null);
-  const [errorAPi, setErrorAPI] = useState<string | null>(null);
-  const [isLoading, setIsloading] = useState<boolean>(false);
+  const [errorAPI, setErrorAPI] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
   const textColor = type === "IN" ? "text-green-600" : "text-red-600";
 
   async function submitForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsloading(true);
+    if (isLoading) return; // Prevent double submission
+    setIsLoading(true);
     setErrorAPI(null);
 
     const formData = new FormData(e.currentTarget);
     const quantity = formData.get("quantity");
-    // null if not provided
     const otherReason = formData.get("otherReason");
 
     const exactReason = otherReason ? otherReason : reason;
@@ -80,13 +80,9 @@ export function StockMovementDialog({
         return;
       }
 
-      if (type === "IN")
-        toast.success(
-          `Stock was successfully ${type === "IN" ? "added" : "deducted"}`,
-        );
+      if (type === "IN") toast.success(`Stock was successfully added`);
       else {
-        // successfulyl removed
-        toast.error("Stock succesfully removed");
+        toast.success("Stock successfully removed");
       }
 
       setOpen(false);
@@ -94,7 +90,7 @@ export function StockMovementDialog({
     } catch (e) {
       setErrorAPI("A network error occurred. Please try again.");
     } finally {
-      setIsloading(false);
+      setIsLoading(false);
     }
   }
 
@@ -103,7 +99,14 @@ export function StockMovementDialog({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
-            <Button className="w-full" variant="outline">
+            <Button
+              className={cn(
+                "w-full",
+                type === "IN"
+                  ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                  : "bg-red-500 hover:bg-red-600 text-white border-red-500",
+              )}
+            >
               {type} {type === "IN" ? "+" : "-"}
             </Button>
           }
@@ -138,6 +141,7 @@ export function StockMovementDialog({
                   min="0.01"
                   step="any"
                   required
+                  disabled={isLoading}
                 />
               </Field>
               <Field>
@@ -147,6 +151,7 @@ export function StockMovementDialog({
                   value={reason ?? ""}
                   onValueChange={setReason}
                   name="reason"
+                  disabled={isLoading}
                 >
                   <SelectTrigger id="reason">
                     <SelectValue placeholder="Select a reason" />
@@ -170,19 +175,20 @@ export function StockMovementDialog({
                     name="otherReason"
                     maxLength={100}
                     required
+                    disabled={isLoading}
                   />
                 </Field>
               )}
 
-              {errorAPi && (
-                <AlertDestructive title="Error" errorText={errorAPi} />
+              {errorAPI && (
+                <AlertDestructive title="Error" errorText={errorAPI} />
               )}
             </FieldGroup>
 
             <DialogFooter className="mt-4">
               <DialogClose
                 render={
-                  <Button variant="outline" type="button">
+                  <Button variant="outline" type="button" disabled={isLoading}>
                     Cancel
                   </Button>
                 }
@@ -194,8 +200,9 @@ export function StockMovementDialog({
                     : "bg-red-500 hover:bg-red-600",
                 )}
                 type="submit"
+                disabled={isLoading}
               >
-                Stock {type === "IN" ? "IN" : "OUt"} {isLoading}
+                Stock {type === "IN" ? "IN" : "OUT"} {isLoading && "..."}
                 {isLoading && (
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 )}
