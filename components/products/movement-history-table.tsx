@@ -37,9 +37,8 @@ export default function MovementHistoryTable({
   console.log("perpage:", perpage);
 
   const [perPage, setPerPage] = useState<number>(perpage);
-  const [transactions, setTransactions] =
-    useState<InventoryMovementDB[]>(historicalMovements);
 
+  const transactions = historicalMovements;
   const onPerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage);
     // new Fetch call to get the new data based on the new perPage value
