@@ -15,6 +15,7 @@ import ProductImageManager from "./productimagemanager";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 import { createProductDataSchema } from "@/schemas/product";
+import { useRouter } from "next/navigation";
 
 export type CreateDataForm = z.infer<typeof createProductDataSchema>;
 
@@ -25,6 +26,8 @@ export type ImageItemType = {
 };
 
 export default function CreateProductForm() {
+  const router = useRouter();
+
   const form = useForm<CreateDataForm>({
     resolver: zodResolver(createProductDataSchema),
     mode: "onChange",
@@ -88,9 +91,8 @@ export default function CreateProductForm() {
     }
 
     toast.success("Product created successfully");
-
-    form.reset();
-    setImages([]);
+    const result = await res.json();
+    router.push(`/products/${result.data.product.id}`);
   };
   return (
     <div>
