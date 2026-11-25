@@ -11,7 +11,7 @@ export default function ProductUtilityBar({
   lastPage,
 }: ProductUtilityBarProps) {
   return (
-    <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-2 container mx-auto">
+    <div className="container mx-auto grid grid-cols-1 items-center justify-items-center gap-3 sm:grid-cols-2 sm:justify-items-stretch py-3">
       <ProductSearch />
       <ProductPagination currentPage={currentPage} lastPage={lastPage} />
     </div>
