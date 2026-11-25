@@ -5,9 +5,7 @@ import {
   PaginationItem,
   PaginationLink,
 } from "@/components/ui/pagination";
-import { Input } from "@/components/ui/input";
 import {
-  Search,
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
@@ -21,79 +19,120 @@ export default function ProductPagination({
   currentPage: number;
   lastPage: number;
 }) {
-  console.log("current page :", currentPage);
-  console.log("last page", lastPage);
-  let activeIndicatorPosition;
-  // first value from the left
-  let valueFirstIndicator;
+  // Avoid invalid pagination values
+  const totalPages = Math.max(1, lastPage);
+  const page = Math.min(Math.max(1, currentPage), totalPages);
 
-  activeIndicatorPosition = 2;
-  valueFirstIndicator = currentPage - 1;
+  // Show up to 3 consecutive pages around the current page
+  let startPage = Math.max(1, page - 1);
+  let endPage = Math.min(totalPages, page + 1);
 
-  //
-  if (currentPage === 1) {
-    activeIndicatorPosition = 1;
-    valueFirstIndicator = 1;
-  } else if (currentPage === lastPage) {
-    activeIndicatorPosition = 3;
-    valueFirstIndicator = currentPage - 2;
+  // Keep 3 visible pages when possible
+  if (page === 1) {
+    endPage = Math.min(totalPages, 3);
+  } else if (page === totalPages) {
+    startPage = Math.max(1, totalPages - 2);
   }
-  //
 
-  if (currentPage === 2 && lastPage === 2) {
-    valueFirstIndicator = 1;
-    activeIndicatorPosition = 2;
+  const visiblePages = [];
+
+  for (let i = startPage; i <= endPage; i++) {
+    visiblePages.push(i);
   }
+
+  const activeClass = "bg-black text-white hover:bg-black hover:text-white";
+
+  const disabledClass = "pointer-events-none opacity-40";
+
   return (
     <div className="flex h-14 items-center justify-end">
       <Pagination className="mx-0 w-auto justify-end">
         <PaginationContent>
+          {/* First page */}
           <PaginationItem>
-            <PaginationLink href={`/?page=1`}>
+            <PaginationLink
+              href="/?page=1"
+              aria-label="Go to first page"
+              className={page === 1 ? disabledClass : ""}
+            >
               <ChevronsLeft className="size-4" />
             </PaginationLink>
           </PaginationItem>
+
+          {/* Previous page */}
           <PaginationItem>
-            <PaginationLink href={`/?page=${currentPage - 1}`}>
+            <PaginationLink
+              href={`/?page=${page - 1}`}
+              aria-label="Go to previous page"
+              className={page === 1 ? disabledClass : ""}
+            >
               <ChevronLeft className="size-4" />
             </PaginationLink>
           </PaginationItem>
+
+          {/* First page when hidden */}
+          {startPage > 1 && (
+            <>
+              <PaginationItem>
+                <PaginationLink href="/?page=1">1</PaginationLink>
+              </PaginationItem>
+
+              {startPage > 2 && (
+                <PaginationItem>
+                  <span className="px-2 text-muted-foreground">...</span>
+                </PaginationItem>
+              )}
+            </>
+          )}
+
+          {/* Visible pages */}
+          {visiblePages.map((pageNumber) => (
+            <PaginationItem key={pageNumber}>
+              <PaginationLink
+                href={`/?page=${pageNumber}`}
+                isActive={pageNumber === page}
+                className={pageNumber === page ? activeClass : ""}
+              >
+                {pageNumber}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+
+          {/* Last page when hidden */}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <PaginationItem>
+                  <span className="px-2 text-muted-foreground">...</span>
+                </PaginationItem>
+              )}
+
+              <PaginationItem>
+                <PaginationLink href={`/?page=${totalPages}`}>
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+
+          {/* Next page */}
           <PaginationItem>
             <PaginationLink
-              href={`/?page=${valueFirstIndicator}`}
-              isActive={activeIndicatorPosition === 1}
+              href={`/?page=${page + 1}`}
+              aria-label="Go to next page"
+              className={page === totalPages ? disabledClass : ""}
             >
-              {valueFirstIndicator}
-            </PaginationLink>
-          </PaginationItem>
-
-          {lastPage > 1 && (
-            <PaginationItem>
-              <PaginationLink
-                href={`/?page=${valueFirstIndicator + 1}`}
-                isActive={activeIndicatorPosition === 2}
-              >
-                {valueFirstIndicator + 1}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-          {lastPage > 2 && (
-            <PaginationItem>
-              <PaginationLink
-                href={`/?page=${valueFirstIndicator + 2}`}
-                isActive={activeIndicatorPosition === 3}
-              >
-                {valueFirstIndicator + 2}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-          <PaginationItem>
-            <PaginationLink href={`/?page=${currentPage + 1}`}>
               <ChevronRight className="size-4" />
             </PaginationLink>
           </PaginationItem>
+
+          {/* Last page */}
           <PaginationItem>
-            <PaginationLink href={`/?page=${lastPage}`}>
+            <PaginationLink
+              href={`/?page=${totalPages}`}
+              aria-label="Go to last page"
+              className={page === totalPages ? disabledClass : ""}
+            >
               <ChevronsRight className="size-4" />
             </PaginationLink>
           </PaginationItem>
