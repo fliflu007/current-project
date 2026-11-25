@@ -6,7 +6,11 @@ import { NotFoundError } from "@/lib/api/errors";
 import { addToInventory } from "@/services/inventory.service";
 import { updateProductQuantity } from "@/services/inventory.service";
 import { getTransactionsbyProduct } from "@/services/inventory.service";
-import { forbiddenResponse, unauthorizedResponse } from "@/lib/api/response";
+import {
+  forbiddenResponse,
+  internalServerErrorResponse,
+  unauthorizedResponse,
+} from "@/lib/api/response";
 import { requireUserContext } from "@/lib/auth/require-user-context";
 
 export async function POST(request: Request) {
@@ -21,7 +25,7 @@ export async function POST(request: Request) {
     const { role, companyId } = await requireUserContext(userId);
 
     // authorisation
-    if (role == "viewer") {
+    if (role === "viewer") {
       return forbiddenResponse();
     }
 
@@ -102,19 +106,17 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(
-      {
-        data: null,
-        error: { code: "Internal_ERROR", message: "Internal server error" },
-      },
-      { status: 500 },
-    );
+    return internalServerErrorResponse();
   }
 }
 
 export async function GET(request: Request) {
   // AUTHENTIFICATION
-  requireUserId();
+  const userId = await requireUserId();
+
+  if (!userId) {
+    return unauthorizedResponse();
+  }
 
   try {
     const url = new URL(request.url);
@@ -122,6 +124,11 @@ export async function GET(request: Request) {
       .string()
       .uuid()
       .parse(url.searchParams.get("productId"));
+
+    // tenant check
+    const { companyId } = await requireUserContext(userId);
+    await getProductForCompany(productId, companyId);
+
     const page = z.coerce
       .number()
       .int()
@@ -169,9 +176,6 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    return NextResponse.json({
-      data: null,
-      error: { code: "Internal_ERROR", message: "Internal server error" },
-    });
+    return internalServerErrorResponse();
   }
 }
