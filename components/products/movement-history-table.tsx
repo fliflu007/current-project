@@ -98,7 +98,9 @@ export default function MovementHistoryTable({
               </TableCell>
               <TableCell className="text-center">{movement.type}</TableCell>
               <TableCell className="text-center">{movement.quantity}</TableCell>
-              <TableCell className="text-center">{movement.comment}</TableCell>
+              <TableCell className="text-center">
+                {movement.comment || "--"}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
