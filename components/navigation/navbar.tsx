@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
+import RoleSwitcher from "./role-switcher";
 
 const items = [
   { value: "admin", label: "admin" },
@@ -23,9 +24,9 @@ const items = [
 ];
 
 export default function Navbar({
-  role = "not provided",
+  role,
 }: {
-  role?: "admin" | "staff" | "viewer" | "not provided";
+  role: "admin" | "staff" | "viewer";
 }) {
   // todo adjust the Nav according to isLoggedIn
 
@@ -52,21 +53,7 @@ export default function Navbar({
         </Link>
 
         <div className="right_side_block hidden md:flex gap-2 ml-auto">
-          <Select items={items}>
-            <SelectTrigger className="w-45">
-              <SelectValue placeholder={role} />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectGroup>
-                {items.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <RoleSwitcher role={role} />
           <form action={logOut}>
             <Button type="submit" variant="secondary" size="lg">
               LogOut
@@ -91,21 +78,7 @@ export default function Navbar({
       {showMobileNav && (
         <div className="absolute left-0 top-14 z-50 h-[calc(100vh-3.5rem)] w-full bg-background md:hidden">
           <div className="grid h-52 grid-rows-4 items-center justify-items-center">
-            <Select items={items}>
-              <SelectTrigger className="w-45">
-                <SelectValue placeholder={role} />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectGroup>
-                  {items.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <RoleSwitcher role={role} />
             <form action={logOut}>
               <Button
                 variant="ghost"
