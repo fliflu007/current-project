@@ -20,6 +20,7 @@ import Image from "next/image";
 import ProductDeleteDialog from "./product-delete-dialog";
 import { deleteByIdAction } from "@/app/(dashboard)/products/actions/action";
 import { ProductDetailUI } from "@/app/(dashboard)/products/[id]/type";
+import { StockMovementDialog } from "./stock-movement-dialog";
 
 export default function ProductDetails({
   productDetail,
@@ -52,12 +53,32 @@ export default function ProductDetails({
             Current stock : <span>{productDetail.data.quantity}</span>
           </p>
           <div className="flex justify-center gap-2">
-            <Button className="bg-green-500">
-              <Plus /> Stock IN
-            </Button>
-            <Button className="bg-red-600">
-              <Minus /> Stock OUT
-            </Button>
+            <div className="flex justify-center gap-2">
+              <StockMovementDialog
+                product={{
+                  id: productDetail.data.id,
+                  name: productDetail.data.name,
+                  quantity: productDetail.data.quantity,
+                  description: productDetail.data.description,
+                  companyId: productDetail.data.companyId,
+                  createdAt: productDetail.data.createdAt,
+                  mainImageUrl: productDetail.images[0]?.url ?? null,
+                }}
+                type="IN"
+              />
+              <StockMovementDialog
+                product={{
+                  id: productDetail.data.id,
+                  name: productDetail.data.name,
+                  quantity: productDetail.data.quantity,
+                  description: productDetail.data.description,
+                  companyId: productDetail.data.companyId,
+                  createdAt: productDetail.data.createdAt,
+                  mainImageUrl: productDetail.images[0]?.url ?? null,
+                }}
+                type="OUT"
+              />
+            </div>
           </div>
         </CardContent>
         <div>
