@@ -36,7 +36,12 @@ export async function POST(request: Request) {
     let validatedQuantity = z.coerce.number().positive().parse(data.quantity);
 
     // VALIDATION REASON
-    const validatedReason = z.string().nullable().optional().parse(data.reason);
+    const validatedReason = z
+      .string()
+      .max(20)
+      .nullable()
+      .optional()
+      .parse(data.reason);
 
     const validatedType = z.enum(["IN", "OUT"]).parse(data.type);
 

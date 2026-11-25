@@ -173,7 +173,7 @@ export function StockMovementDialog({
                   <Input
                     id="otherReason"
                     name="otherReason"
-                    maxLength={100}
+                    maxLength={20}
                     required
                     disabled={isLoading}
                   />
