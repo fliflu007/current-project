@@ -260,7 +260,169 @@ The project uses a layered testing approach:
 
 ---
 
-## 4. Test Coverage Summary
+## 4. Role-Based Access Control (RBAC) Testing
+
+### 4.1 ROLE-02 Staff Permissions
+
+Staff users (non-admin, non-viewer) have read-write access to inventory but no write access to product master data.
+
+| Action | Expected | Status | Evidence |
+|--------|----------|--------|----------|
+| View product list | ✅ Access | Manual | Server Component, tenant-filtered by companyId |
+| View product detail | ✅ Access | Manual | Server Component, tenant-filtered by companyId |
+| Create product (POST /api/product/create) | ❌ 403 | ✅ PASS | `create.product.api.test.ts:178-192` |
+| Edit product (PATCH /api/product/[id]) | ❌ 403 | ✅ PASS | `patch.test.ts:361-376` |
+| Delete product (Server Action) | ❌ Error | ✅ PASS | `delete.product.action.test.ts:133-149` |
+| Stock IN/OUT (POST /api/stock) | ✅ Access | Code allows (admin+staff) | `app/api/stock/route.ts:28-30` |
+| Stock history (GET /api/stock) | ✅ Access | ❌ NOT TESTED | No automated test |
+
+**UI gating:**
+- Create Product button: hidden (`product-toolbar.tsx:13`)
+- Stock IN/OUT buttons: visible (`product-details.tsx:55`, `product-card.tsx:73`)
+- Edit button: hidden (`product-details.tsx:118`)
+- Delete button: hidden (`product-details.tsx:118`)
+
+**Staff RBAC: VERIFIED** — All backend enforcement tested and passing.
+
+---
+
+### 4.2 ROLE-03 Viewer Permissions
+
+Viewer users have read-only access. No write access to product master data or inventory.
+
+| Action | Expected | Status | Evidence |
+|--------|----------|--------|----------|
+| View product list | ✅ Access | Manual | Server Component, tenant-filtered by companyId |
+| View product detail | ✅ Access | Manual | Server Component, tenant-filtered by companyId |
+| Create product (POST /api/product/create) | ❌ 403 | Code enforces (`role !== "admin"`) | `app/api/product/create/route.ts:38-40` |
+| Edit product (PATCH /api/product/[id]) | ❌ 403 | Code enforces (`role != "admin"`) | `app/api/product/[id]/route.ts:40-42` |
+| Delete product (Server Action) | ❌ Error | Code enforces (`role !== "admin"`) | `app/(dashboard)/products/actions/action.tsx:35-37` |
+| Stock IN/OUT (POST /api/stock) | ❌ 403 | ❌ NOT TESTED | Code has check (`role === "viewer"`) but no test |
+| Stock history (GET /api/stock) | ✅ Access | ❌ NOT TESTED | No automated test; no role check in route |
+
+**UI gating:**
+- Create Product button: hidden (`product-toolbar.tsx:13`)
+- Stock IN/OUT buttons: hidden (`product-details.tsx:55`, `product-card.tsx:73`)
+- Edit button: hidden (`product-details.tsx:118`)
+- Delete button: hidden (`product-details.tsx:118`)
+
+**Viewer RBAC: PARTIALLY VERIFIED** — UI gating verified in code. Backend API 403 for viewer on stock endpoint NOT tested (code check exists but no test).
+
+---
+
+### 4.3 Backend RBAC Audit Table
+
+| Endpoint | Method | Admin | Staff | Viewer | Unauth | Enforcement Location |
+|----------|--------|-------|-------|--------|--------|---------------------|
+| /api/product/create | POST | ✅ 201 | ❌ 403 | ❌ 403 | ❌ 401 | `app/api/product/create/route.ts:38-40` |
+| /api/product/[id] | PATCH | ✅ 200 | ❌ 403 | ❌ 403 | ❌ 401 | `app/api/product/[id]/route.ts:40-42` |
+| /api/product/[id] | DELETE | N/A | N/A | N/A | N/A | No API endpoint; Server Action only |
+| /api/stock | POST | ✅ 200 | ✅ 200 | ❌ 403 | ❌ 401 | `app/api/stock/route.ts:28-30` |
+| /api/stock | GET | ✅ 200 | ✅ 200 | ✅ 200 | ❌ 401 | `app/api/stock/route.ts:118-124` (auth only) |
+| deleteByIdAction | Server Action | ✅ success | ❌ error | ❌ error | ❌ error | `app/(dashboard)/products/actions/action.tsx:35-37` |
+| Product list page | GET | ✅ | ✅ | ✅ | redirect | `app/(dashboard)/page.tsx` (Server Component) |
+| Product detail page | GET | ✅ | ✅ | ✅ | redirect | `app/(dashboard)/products/[id]/page.tsx` (Server Component) |
+| Product edit page | GET | ✅ | redirect | redirect | redirect | `app/(dashboard)/products/[id]/edit/page.tsx:20-22` |
+| Product create page | GET | ✅ | ✅* | ✅* | redirect | No role check on page; button hidden in UI |
+
+* Page loads but Create Product button is hidden; form submission blocked at API level (403).
+
+**Test coverage of backend RBAC:**
+- Staff 403 on create: ✅ TESTED (`create.product.api.test.ts:178-192`)
+- Staff 403 on edit: ✅ TESTED (`patch.test.ts:361-376`)
+- Staff cannot delete: ✅ TESTED (`delete.product.action.test.ts:133-149`)
+- Viewer 403 on stock: ❌ NOT TESTED (code check exists at `app/api/stock/route.ts:28-30` but no test)
+- Admin success paths: ✅ TESTED for create, edit, delete, stock
+
+---
+
+### 4.4 ROLE-04 Direct Navigation Testing
+
+Direct URL navigation tests for role-based access to pages and API endpoints:
+
+| Scenario | Role | Expected Result | Status | Evidence |
+|----------|------|-----------------|--------|----------|
+| Direct navigate to /products/new | Staff | Page loads (no redirect) | Manual | Page has no role gate |
+| Direct navigate to /products/new | Viewer | Page loads (no redirect) | Manual | Page has no role gate |
+| Direct navigate to /products/[id]/edit | Staff | Redirect to /dashboard | Code | `edit/page.tsx:20-22` (`role !== "admin"` → redirect) |
+| Direct navigate to /products/[id]/edit | Viewer | Redirect to /dashboard | Code | `edit/page.tsx:20-22` |
+| Direct API call: POST /api/product/create | Staff | 403 Forbidden | ✅ TESTED | `create.product.api.test.ts:178-192` |
+| Direct API call: POST /api/product/create | Viewer | 403 Forbidden | Code enforces | `create/route.ts:38-40` |
+| Direct API call: PATCH /api/product/[id] | Staff | 403 Forbidden | ✅ TESTED | `patch.test.ts:361-376` |
+| Direct API call: PATCH /api/product/[id] | Viewer | 403 Forbidden | Code enforces | `[id]/route.ts:40-42` |
+| Direct API call: POST /api/stock | Viewer | 403 Forbidden | ❌ NOT TESTED | Code check at `stock/route.ts:28-30` |
+
+**Gap:** Create page (`/products/new`) has no server-side role check — relies entirely on UI button hiding. A staff or viewer user who directly navigates to the URL can access the form, but submission will be rejected at the API level (403).
+
+---
+
+### 4.5 ROLE-05 Backend Protection Testing
+
+Backend protection layers verified for all mutating endpoints:
+
+| Protection Layer | Endpoints | Status | Evidence |
+|-----------------|-----------|--------|----------|
+| Authentication (401 if not logged in) | All mutating endpoints | ✅ | `requireUserId()` called before any business logic |
+| Authorization (role check) | Create, Edit, Stock POST | ✅ | Role checks before data mutation |
+| Tenant isolation (companyId filter) | All data access | ✅ | `companyId` from user context used in all DB queries |
+| Input validation | All endpoints | ✅ | Zod schemas on all request bodies |
+| Error handling | All endpoints | ✅ | Try/catch with proper error responses |
+
+**Endpoint-by-endpoint protection:**
+
+**POST /api/product/create** (`app/api/product/create/route.ts`):
+1. `requireUserId()` → 401 if unauthenticated (line 27-30)
+2. `requireUserContext()` → profile not found if no profile (line 33-37)
+3. `role !== "admin"` → 403 forbidden (line 38-40)
+4. `companyId` from context used for duplicate name check (line 68-77)
+5. `companyId` passed to `insertProductDb()` (line 103-106)
+
+**PATCH /api/product/[id]** (`app/api/product/[id]/route.ts`):
+1. `requireUserId()` → 401 if unauthenticated (line 32-36)
+2. `requireUserContext()` → gets companyId, role (line 38)
+3. `role != "admin"` → 403 forbidden (line 40-42)
+4. `getProductForCompany(id, companyId)` → tenant check, throws NotFoundError if not found or wrong company (line 45)
+
+**POST /api/stock** (`app/api/stock/route.ts`):
+1. `requireUserId()` → 401 if unauthenticated (line 21-24)
+2. `requireUserContext()` → gets role, companyId (line 25)
+3. `role === "viewer"` → 403 forbidden (line 28-30)
+4. `getProductForCompany(validedId, companyId)` → tenant check (line 49)
+
+**DELETE Server Action** (`app/(dashboard)/products/actions/action.tsx`):
+1. `requireUserId()` → auth error if unauthenticated (line 28-32)
+2. `requireUserContext()` → gets role, companyId (line 33)
+3. `role !== "admin"` → error "not admin, can not delete product" (line 35-37)
+4. Tenant filter: `eq(products.companyId, companyId)` in select and delete (line 45, 61)
+
+**GET /api/stock** (`app/api/stock/route.ts:118-186`):
+1. `requireUserId()` → 401 if unauthenticated (line 120-124)
+2. `requireUserContext()` → gets companyId (line 134)
+3. `getProductForCompany(productId, companyId)` → tenant check (line 135)
+4. No role-based restriction — all authenticated roles can read history
+
+**Server Component pages:**
+- Product list: `requireUserIdCached()` + `requireUserContextCached()`, tenant-filtered DB query (`app/(dashboard)/page.tsx:23-45`)
+- Product detail: `requireUserIdCached()` + `requireUserContextCached()`, tenant-filtered DB query (`app/(dashboard)/products/[id]/page.tsx:22-46`)
+- Product edit: `requireUserIdCached()` + `requireUserContextCached()`, `role !== "admin"` → redirect (`app/(dashboard)/products/[id]/edit/page.tsx:17-22`)
+
+**Backend Protection: VERIFIED** — All mutating endpoints enforce authentication, authorization, and tenant isolation. The only gap is the missing automated test for viewer 403 on stock endpoint.
+
+---
+
+### 4.6 RBAC Gaps and Recommendations
+
+| # | Gap | Severity | Recommendation |
+|---|-----|----------|----------------|
+| 1 | Viewer 403 on stock endpoint not tested | Medium | Add test: `add.remove.stock.test.ts` — mock viewer role, expect 403 |
+| 2 | Create page (`/products/new`) has no server-side role gate | Low | Add role check in page component or rely on API-level 403 (current behavior) |
+| 3 | GET /api/stock has no role restriction (all roles can read) | Low | By design — viewers should be able to read stock history |
+| 4 | No automated test for GET /api/product/[id] | High | Add automated tests for detail endpoint (401, 404, 200) |
+| 5 | No automated test for GET /api/stock (history) | High | Add automated tests for history endpoint |
+
+---
+
+## 8. Test Coverage Summary
 
 | Feature | Automated | Manual | Gaps |
 |---------|-----------|--------|------|
@@ -279,14 +441,14 @@ The project uses a layered testing approach:
 
 ---
 
-## 5. Manual Frontend Testing Plan
+## 9. Manual Frontend Testing Plan
 
-### 5.1 Test Environment Setup
+### 9.1 Test Environment Setup
 1. Start dev server: `pnpm dev`
 2. Have test users for each role (admin, staff, viewer)
 3. Have at least two companies with products
 
-### 5.2 Test Scenarios
+### 9.2 Test Scenarios
 
 #### Authentication
 - [ ] Login with valid credentials → dashboard loads
@@ -367,7 +529,7 @@ The project uses a layered testing approach:
 
 ---
 
-## 6. Running Tests
+## 10. Running Tests
 
 ### Vitest (Unit/API)
 ```bash
@@ -395,7 +557,7 @@ pnpm playwright test --headed
 
 ---
 
-## 7. Known Test Limitations
+## 11. Known Test Limitations
 
 | Limitation | Impact |
 |------------|--------|
@@ -408,7 +570,7 @@ pnpm playwright test --headed
 
 ---
 
-## 8. Discrepancies Found During Audit
+## 12. Discrepancies Found During Audit
 
 | Document Claim | Actual Status |
 |----------------|---------------|
@@ -421,7 +583,7 @@ pnpm playwright test --headed
 
 ---
 
-## 9. Recommendations
+## 13. Recommendations
 
 ### High Priority
 1. Add automated tests for GET /api/product/[id] (detail endpoint)
