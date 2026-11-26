@@ -52,34 +52,36 @@ export default function ProductDetails({
           <p className="text-sm font-bold mb-4">
             Current stock : <span>{productDetail.data.quantity}</span>
           </p>
-          <div className="flex justify-center gap-2">
+          {role !== "viewer" && (
             <div className="flex justify-center gap-2">
-              <StockMovementDialog
-                product={{
-                  id: productDetail.data.id,
-                  name: productDetail.data.name,
-                  quantity: productDetail.data.quantity,
-                  description: productDetail.data.description,
-                  companyId: productDetail.data.companyId,
-                  createdAt: productDetail.data.createdAt,
-                  mainImageUrl: productDetail.images[0]?.url ?? null,
-                }}
-                type="IN"
-              />
-              <StockMovementDialog
-                product={{
-                  id: productDetail.data.id,
-                  name: productDetail.data.name,
-                  quantity: productDetail.data.quantity,
-                  description: productDetail.data.description,
-                  companyId: productDetail.data.companyId,
-                  createdAt: productDetail.data.createdAt,
-                  mainImageUrl: productDetail.images[0]?.url ?? null,
-                }}
-                type="OUT"
-              />
+              <div className="flex justify-center gap-2">
+                <StockMovementDialog
+                  product={{
+                    id: productDetail.data.id,
+                    name: productDetail.data.name,
+                    quantity: productDetail.data.quantity,
+                    description: productDetail.data.description,
+                    companyId: productDetail.data.companyId,
+                    createdAt: productDetail.data.createdAt,
+                    mainImageUrl: productDetail.images[0]?.url ?? null,
+                  }}
+                  type="IN"
+                />
+                <StockMovementDialog
+                  product={{
+                    id: productDetail.data.id,
+                    name: productDetail.data.name,
+                    quantity: productDetail.data.quantity,
+                    description: productDetail.data.description,
+                    companyId: productDetail.data.companyId,
+                    createdAt: productDetail.data.createdAt,
+                    mainImageUrl: productDetail.images[0]?.url ?? null,
+                  }}
+                  type="OUT"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
         <div>
           <div className="px-4">

@@ -23,6 +23,7 @@ export default async function Page({ searchParams }: PageProps) {
   const user = await requireUserIdCached();
 
   const { companyId, role } = await requireUserContextCached(user as string);
+  const typedRole = role as "admin" | "staff" | "viewer";
 
   const pageParam = z.coerce.number().int().positive().safeParse(params.page);
   let page: number;
@@ -105,7 +106,7 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <div>
-      <ProductToolbar />
+      <ProductToolbar role={typedRole} />
 
       <div className="container mx-auto">
         <ProductUtilityBar currentPage={page} lastPage={lastPage} />
@@ -117,7 +118,7 @@ export default async function Page({ searchParams }: PageProps) {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
             {productsWithImages.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} role={typedRole} />
             ))}
           </div>
         )}

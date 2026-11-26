@@ -15,7 +15,13 @@ export type ProductCardType = {
   quantity: string;
 };
 
-export default function ProductCard({ product }: { product: ProductCardType }) {
+export default function ProductCard({
+  product,
+  role,
+}: {
+  product: ProductCardType;
+  role: "admin" | "staff" | "viewer";
+}) {
   const router = useRouter();
 
   function sendToDetails(e: React.MouseEvent<HTMLDivElement>) {
@@ -64,8 +70,12 @@ export default function ProductCard({ product }: { product: ProductCardType }) {
           </p>
 
           <div className="flex flex-row min-[600px]:flex-col gap-2">
-            <StockMovementDialog product={product} type="IN" />
-            <StockMovementDialog product={product} type="OUT" />
+            {role !== "viewer" && (
+              <>
+                <StockMovementDialog product={product} type="IN" />
+                <StockMovementDialog product={product} type="OUT" />
+              </>
+            )}
           </div>
         </div>
       </Card>

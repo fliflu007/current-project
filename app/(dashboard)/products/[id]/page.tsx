@@ -71,7 +71,7 @@ export default async function page({ params }: PageProps) {
   return (
     <div>
       <div className="mb-8">
-        <ProductToolbar></ProductToolbar>
+        <ProductToolbar role={typedRole}></ProductToolbar>
       </div>
       <ProductViewer
         productDetail={productDetail}
