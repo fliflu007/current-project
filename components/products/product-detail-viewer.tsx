@@ -32,6 +32,7 @@ export default function ProductDetailViewer({
               setView("detail");
             }}
             value="detail"
+            className="data-active:bg-gray-900 data-active:text-white hover:bg-gray-800 hover:text-white"
           >
             Detail
           </TabsTrigger>
@@ -40,6 +41,7 @@ export default function ProductDetailViewer({
               setView("inventory");
             }}
             value="inventory"
+            className="data-active:bg-gray-900 data-active:text-white hover:bg-gray-800 hover:text-white"
           >
             Inventory Movement
           </TabsTrigger>
