@@ -76,7 +76,12 @@ export function StockMovementDialog({
       });
       const response = await res.json();
       if (!res.ok) {
-        setErrorAPI(response.error ?? "Error while fetching");
+        const errorObj = response.error ?? "Error while fetching";
+        setErrorAPI(
+          typeof errorObj === "object" && errorObj !== null
+            ? (errorObj as { message?: string }).message ?? "Error while fetching"
+            : String(errorObj),
+        );
         return;
       }
 
