@@ -9,16 +9,22 @@ import MovementHistoryTable from "./movement-history-table";
 import { ProductDetailUI } from "@/app/(dashboard)/products/[id]/type";
 import { InventoryMovementDB } from "@/schemas/inventory";
 
-export default function ProductDetailViewer({
+export function ProductViewer({
   productDetail,
   historicalMovements,
   perpage,
   role,
+  currentPage,
+  totalPages,
+  totalMovements,
 }: {
   productDetail: ProductDetailUI;
   historicalMovements: InventoryMovementDB[];
   perpage: number;
   role: UserRole;
+  currentPage: number;
+  totalPages: number;
+  totalMovements: number;
 }) {
   const [view, setView] = useState<"detail" | "inventory">("detail");
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -32,7 +38,7 @@ export default function ProductDetailViewer({
               setView("detail");
             }}
             value="detail"
-            className="data-active:bg-gray-900 data-active:text-white hover:bg-gray-800 hover:text-white"
+            className="data-active:bg-primary data-active:text-primary-foreground"
           >
             Detail
           </TabsTrigger>
@@ -41,7 +47,7 @@ export default function ProductDetailViewer({
               setView("inventory");
             }}
             value="inventory"
-            className="data-active:bg-gray-900 data-active:text-white hover:bg-gray-800 hover:text-white"
+            className="data-active:bg-primary data-active:text-primary-foreground"
           >
             Inventory Movement
           </TabsTrigger>
@@ -69,6 +75,9 @@ export default function ProductDetailViewer({
             <MovementHistoryTable
               historicalMovements={historicalMovements}
               perpage={perpage}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalMovements={totalMovements}
             />
           </div>
         </div>

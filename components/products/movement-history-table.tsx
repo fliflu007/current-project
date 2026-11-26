@@ -3,16 +3,14 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoveUp, MoveDown, ChevronDown } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { PaginationHistory } from "./movement-history-pagination";
-import { InventoryMovementDB } from "@/schemas/inventory";
+
 import {
   Select,
   SelectContent,
@@ -21,43 +19,56 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { inventoryMovements } from "@/db/schema";
-import { db } from "@/db";
-import { desc, asc } from "drizzle-orm";
-import { useState } from "react";
+import { InventoryMovementDB } from "@/schemas/inventory";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function MovementHistoryTable({
   historicalMovements,
   perpage,
+  currentPage,
+  totalPages,
+  totalMovements,
 }: {
   historicalMovements: InventoryMovementDB[];
   perpage: number;
+  currentPage: number;
+  totalPages: number;
+  totalMovements: number;
 }) {
-  console.log("historicalMovements:", historicalMovements);
-  console.log("perpage:", perpage);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [perPage, setPerPage] = useState<number>(perpage);
+  // Update URL parameters to fetch the requested page
+  const updateURL = (page: number, newPerPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-  const transactions = historicalMovements;
-  const onPerPageChange = (newPerPage: number) => {
-    setPerPage(newPerPage);
-    // new Fetch call to get the new data based on the new perPage value
+    params.set("page", String(page));
+    params.set("perPage", String(newPerPage));
+
+    router.push(`${pathname}?${params.toString()}`);
   };
+
+  const start = totalMovements === 0 ? 0 : (currentPage - 1) * perpage + 1;
+
+  const end = Math.min(currentPage * perpage, totalMovements);
 
   return (
     <div className="rounded-xl border bg-card shadow-sm w-full mt-3">
-      <div className="title font-medium px-5 py-3">Inventory Movements</div>
-      <div className="bg-secondary px-5 py-3 text-right">
-        <div className="flex items-center gap-2 justify-between">
-          <div className="w-fit shrink-0">
-            <PaginationHistory />
-          </div>
+      <div className="font-medium px-5 py-3">Inventory Movements</div>
+
+      <div className="bg-secondary px-5 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">
+            Showing {start}–{end} of {totalMovements}
+          </span>
 
           <Select
-            value={String(perPage)}
-            onValueChange={(value) => onPerPageChange(Number(value))}
+            value={String(perpage)}
+            onValueChange={(value) => updateURL(1, Number(value))}
           >
-            <SelectTrigger className="w-[80px]">
+            <SelectTrigger className="w-[85px]">
               <SelectValue />
             </SelectTrigger>
 
@@ -69,42 +80,73 @@ export default function MovementHistoryTable({
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            Columns
-            <ChevronDown className="ml-2 size-4 " />
-          </Button>
         </div>
       </div>
+
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Date</TableHead>
-            <TableHead className="text-center">
-              <span className="inline-flex items-center gap-1">
-                Type
-                <MoveUp className="size-3" />
-                <MoveDown className="size-3" />
-              </span>
-            </TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-center">Type</TableHead>
             <TableHead className="text-center">Quantity</TableHead>
             <TableHead className="text-center">Reason</TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody>
-          {transactions.map((movement) => (
-            <TableRow key={movement.id}>
-              <TableCell className="font-medium">
-                {movement.createdAt.toLocaleString()}{" "}
-              </TableCell>
-              <TableCell className="text-center">{movement.type}</TableCell>
-              <TableCell className="text-center">{movement.quantity}</TableCell>
-              <TableCell className="text-center">
-                {movement.comment || "--"}
+          {historicalMovements.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center py-8">
+                No inventory movements yet.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            historicalMovements.map((movement) => (
+              <TableRow key={movement.id}>
+                <TableCell className="font-medium">
+                  {movement.createdAt.toLocaleString()}
+                </TableCell>
+
+                <TableCell className="text-center">{movement.type}</TableCell>
+
+                <TableCell className="text-center">
+                  {movement.quantity}
+                </TableCell>
+
+                <TableCell className="text-center">
+                  {movement.comment || "--"}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
+
+      <div className="flex items-center justify-between px-5 py-3">
+        <span className="text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage <= 1}
+            onClick={() => updateURL(currentPage - 1, perpage)}
+          >
+            Previous
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage >= totalPages}
+            onClick={() => updateURL(currentPage + 1, perpage)}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
