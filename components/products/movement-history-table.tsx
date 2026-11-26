@@ -45,7 +45,7 @@ export default function MovementHistoryTable({
   };
 
   return (
-    <div className="rounded-xl border bg-card shadow-sm w-full">
+    <div className="rounded-xl border bg-card shadow-sm w-full mt-3">
       <div className="title font-medium px-5 py-3">Inventory Movements</div>
       <div className="bg-secondary px-5 py-3 text-right">
         <div className="flex items-center gap-2 justify-between">

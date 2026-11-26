@@ -24,7 +24,7 @@ export default function ProductDetailViewer({
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   return (
-    <div>
+    <div className="">
       <Tabs className="w-100 block md:hidden">
         <TabsList>
           <TabsTrigger
@@ -47,8 +47,15 @@ export default function ProductDetailViewer({
       </Tabs>
 
       <div className="md:flex md:mx-auto md:gap-6 max-w-7xl ">
-        <div className={cn(isMobile && view !== "detail" && "hidden")}>
-          <ProductDetails productDetail={productDetail} role={role} />
+        <div
+          className={cn(
+            "md:flex-1.5",
+            isMobile && view !== "detail" && "hidden",
+          )}
+        >
+          <div className="p-3">
+            <ProductDetails productDetail={productDetail} role={role} />
+          </div>
         </div>
         <div
           className={cn(
@@ -56,10 +63,12 @@ export default function ProductDetailViewer({
             isMobile && view !== "inventory" && "hidden",
           )}
         >
-          <MovementHistoryTable
-            historicalMovements={historicalMovements}
-            perpage={perpage}
-          />
+          <div className="px-3">
+            <MovementHistoryTable
+              historicalMovements={historicalMovements}
+              perpage={perpage}
+            />
+          </div>
         </div>
       </div>
     </div>

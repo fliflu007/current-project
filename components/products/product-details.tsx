@@ -34,8 +34,8 @@ export default function ProductDetails({
     typeof window === "undefined" ? "SERVER" : "BROWSER",
   );
   return (
-    <div className="flex w-full justify-center md:block md:w-fit">
-      <Card className="w-full max-w-sm shadow-md bg-gray-50">
+    <div className="flex w-full justify-center md:block md:w-full">
+      <Card className="w-full max-w-sm md:max-w-lg shadow-md bg-gray-50">
         <CardHeader>
           <CardTitle>
             <div className="font-light"> Product: </div>
