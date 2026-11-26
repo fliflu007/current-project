@@ -26,7 +26,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
       toastOptions={{
-        duration: 5000,
+        duration: 2000,
         classNames: {
           toast: "cn-toast",
           success: "!bg-green-600 !text-white !border-green-600",
