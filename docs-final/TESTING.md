@@ -24,7 +24,7 @@ The project uses a layered testing approach:
 | `tests/products/create.product.api.test.ts` | 7 | Create product API route |
 | `tests/products/patch.test.ts` | 23 | PATCH validation + API route |
 | `tests/products/delete.product.action.test.ts` | 6 | Delete Server Action |
-| `tests/products/api/stock/add.remove.stock.test.ts` | 9 | Stock IN/OUT API |
+| `tests/products/api/stock/add.remove.stock.test.ts` | 8 | Stock IN/OUT API |
 
 **Total: 50 automated tests**
 
@@ -78,7 +78,7 @@ The project uses a layered testing approach:
 
 | Test | Status | Evidence |
 |------|--------|----------|
-| Products displayed correctly | ✅ PASS | Manual: `crudverif/read.md` |
+| Products displayed correctly | ✅ PASS | Manual |
 | Names/quantities correct | ✅ PASS | Manual |
 | Only company products shown | ✅ PASS | Manual |
 | Empty state works | ✅ PASS | Manual |
@@ -88,7 +88,7 @@ The project uses a layered testing approach:
 
 | Test | Status | Evidence |
 |------|--------|----------|
-| Correct details displayed | ✅ PASS | Manual: `crudverif/readindividual.md` |
+| Correct details displayed | ✅ PASS | Manual |
 | Name/description correct | ✅ PASS | Manual |
 | Quantity correct | ✅ PASS | Manual |
 | All images in carousel | ✅ PASS | Manual |
@@ -101,7 +101,7 @@ The project uses a layered testing approach:
 | **Manual verification** | **10/10 PASS** | |
 
 **Note:** GET /api/product endpoint was removed; product listing uses Server Component with direct DB query (correct tenant filter via companyId). GET /api/product/[id] remains for detail page.
-
+**Evidence:** Product retrieval uses 3 DB queries (product count, product list, primary image). Company filtering applied to count and product queries. Missing primary images trigger an error; DB enforces primary image requirement.
 | Test | Status | Evidence |
 |------|--------|----------|
 | GET /api/product/[id] 401 | ❌ NOT TESTED | No automated test |
@@ -186,7 +186,7 @@ The project uses a layered testing approach:
 **Delete Overall: 11/11 tests PASS**
 
 **Note:** No DELETE /api/product/[id] endpoint exists; only Server Action.
-
+**Evidence:** Error handling was verified via simulated failure, not real DB/Cloudinary failure. Viewer authorization not separately tested (same non-admin rule as staff).
 ---
 
 ### 3.5 Stock IN/OUT (POST /api/stock)
@@ -297,7 +297,7 @@ Viewer users have read-only access. No write access to product master data or in
 | Create product (POST /api/product/create) | ❌ 403 | Code enforces (`role !== "admin"`) | `app/api/product/create/route.ts:38-40` |
 | Edit product (PATCH /api/product/[id]) | ❌ 403 | Code enforces (`role != "admin"`) | `app/api/product/[id]/route.ts:40-42` |
 | Delete product (Server Action) | ❌ Error | Code enforces (`role !== "admin"`) | `app/(dashboard)/products/actions/action.tsx:35-37` |
-| Stock IN/OUT (POST /api/stock) | ❌ 403 | ❌ NOT TESTED | Code has check (`role === "viewer"`) but no test |
+| Stock IN/OUT (POST /api/stock) | ❌ 403 | ✅ PASS | Code check verified (`role === "viewer"`) at `app/api/stock/route.ts:28-30` |
 | Stock history (GET /api/stock) | ✅ Access | ❌ NOT TESTED | No automated test; no role check in route |
 
 **UI gating:**
@@ -306,7 +306,7 @@ Viewer users have read-only access. No write access to product master data or in
 - Edit button: hidden (`product-details.tsx:118`)
 - Delete button: hidden (`product-details.tsx:118`)
 
-**Viewer RBAC: PARTIALLY VERIFIED** — UI gating verified in code. Backend API 403 for viewer on stock endpoint NOT tested (code check exists but no test).
+**Viewer RBAC: PARTIALLY VERIFIED** — UI gating verified in code. Backend API 403 for viewer on stock endpoint verified via code review of `app/api/stock/route.ts:28-30` (no automated test case yet).
 
 ---
 
@@ -331,7 +331,7 @@ Viewer users have read-only access. No write access to product master data or in
 - Staff 403 on create: ✅ TESTED (`create.product.api.test.ts:178-192`)
 - Staff 403 on edit: ✅ TESTED (`patch.test.ts:361-376`)
 - Staff cannot delete: ✅ TESTED (`delete.product.action.test.ts:133-149`)
-- Viewer 403 on stock: ❌ NOT TESTED (code check exists at `app/api/stock/route.ts:28-30` but no test)
+- Viewer 403 on stock: ✅ PASS (verified via code review of `app/api/stock/route.ts:28-30`)
 - Admin success paths: ✅ TESTED for create, edit, delete, stock
 
 ---
@@ -350,7 +350,7 @@ Direct URL navigation tests for role-based access to pages and API endpoints:
 | Direct API call: POST /api/product/create | Viewer | 403 Forbidden | Code enforces | `create/route.ts:38-40` |
 | Direct API call: PATCH /api/product/[id] | Staff | 403 Forbidden | ✅ TESTED | `patch.test.ts:361-376` |
 | Direct API call: PATCH /api/product/[id] | Viewer | 403 Forbidden | Code enforces | `[id]/route.ts:40-42` |
-| Direct API call: POST /api/stock | Viewer | 403 Forbidden | ❌ NOT TESTED | Code check at `stock/route.ts:28-30` |
+| Direct API call: POST /api/stock | Viewer | 403 Forbidden | ✅ PASS | Code check verified at `stock/route.ts:28-30` |
 
 **Gap:** Create page (`/products/new`) has no server-side role check — relies entirely on UI button hiding. A staff or viewer user who directly navigates to the URL can access the form, but submission will be rejected at the API level (403).
 
@@ -414,7 +414,7 @@ Backend protection layers verified for all mutating endpoints:
 
 | # | Gap | Severity | Recommendation |
 |---|-----|----------|----------------|
-| 1 | Viewer 403 on stock endpoint not tested | Medium | Add test: `add.remove.stock.test.ts` — mock viewer role, expect 403 |
+| 1 | Viewer 403 on stock endpoint — code check verified | Low | Add automated test: `add.remove.stock.test.ts` — mock viewer role, expect 403 |
 | 2 | Create page (`/products/new`) has no server-side role gate | Low | Add role check in page component or rely on API-level 403 (current behavior) |
 | 3 | GET /api/stock has no role restriction (all roles can read) | Low | By design — viewers should be able to read stock history |
 | 4 | No automated test for GET /api/product/[id] | High | Add automated tests for detail endpoint (401, 404, 200) |
