@@ -37,16 +37,18 @@ export default function Navbar({
       {/* Desktop */}
       <div className="container mx-auto grid h-full grid-cols-2 lg:grid-cols-3 items-center">
         <div className="navbar-brand flex items-center gap-5 p-3">
-          <Image
-            src="/logo.svg"
-            alt="Inventory System Logo"
-            width={24}
-            height={24}
-          />
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.svg"
+              alt="Inventory System Logo"
+              width={24}
+              height={24}
+            />
 
-          <p className="whitespace-nowrap text-sm font-extrabold">
-            INVENTORY SYSTEM
-          </p>
+            <p className="whitespace-nowrap text-sm font-extrabold">
+              INVENTORY SYSTEM
+            </p>
+          </Link>
         </div>
         <Link href="/" className="hidden lg:block">
           <div className="text-c-label  text-center ">PRODUCTS PAGE</div>
