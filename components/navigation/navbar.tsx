@@ -33,7 +33,7 @@ export default function Navbar({
   const [showMobileNav, setMobileNav] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 h-14 bg-white">
+    <nav className="h-14 bg-white">
       {/* Desktop */}
       <div className="container mx-auto grid h-full grid-cols-2 lg:grid-cols-3 items-center">
         <div className="navbar-brand flex items-center gap-5 p-3">

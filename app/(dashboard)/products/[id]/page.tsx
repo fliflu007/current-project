@@ -105,10 +105,6 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   return (
     <div>
-      <div className="mb-8">
-        <ProductToolbar role={typedRole} />
-      </div>
-
       <ProductViewer
         productDetail={productDetail}
         historicalMovements={historicalMovements}

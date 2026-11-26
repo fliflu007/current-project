@@ -15,7 +15,7 @@ type PageProps = {
   }>;
 };
 
-const pageSize = 10;
+const pageSize = 15;
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
@@ -106,19 +106,24 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <div>
-      <ProductToolbar role={typedRole} />
-
+      <div className="sticky top-[88px] z-50 bg-background shadow-sm">
+        <div className="container mx-auto">
+          <ProductUtilityBar currentPage={page} lastPage={lastPage} />
+        </div>
+      </div>
       <div className="container mx-auto">
-        <ProductUtilityBar currentPage={page} lastPage={lastPage} />
-
         {productSum < 1 ? (
           <div className="flex min-h-100 items-center justify-center">
             <p className="text-muted-foreground">No products found.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6 pt-4">
             {productsWithImages.map((product) => (
-              <ProductCard key={product.id} product={product} role={typedRole} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                role={typedRole}
+              />
             ))}
           </div>
         )}
