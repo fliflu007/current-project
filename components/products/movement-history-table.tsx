@@ -23,6 +23,8 @@ import { InventoryMovementDB } from "@/schemas/inventory";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { PaginationHistory } from "./movement-history-pagination";
+
 export default function MovementHistoryTable({
   historicalMovements,
   perpage,
@@ -40,7 +42,6 @@ export default function MovementHistoryTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Update URL parameters to fetch the requested page
   const updateURL = (page: number, newPerPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -59,7 +60,7 @@ export default function MovementHistoryTable({
       <div className="font-medium px-5 py-3">Inventory Movements</div>
 
       <div className="bg-secondary px-5 py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <span className="text-sm text-muted-foreground">
             Showing {start}–{end} of {totalMovements}
           </span>
@@ -122,30 +123,16 @@ export default function MovementHistoryTable({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between px-5 py-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3">
         <span className="text-sm text-muted-foreground">
           Page {currentPage} of {totalPages}
         </span>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => updateURL(currentPage - 1, perpage)}
-          >
-            Previous
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => updateURL(currentPage + 1, perpage)}
-          >
-            Next
-          </Button>
-        </div>
+        <PaginationHistory
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => updateURL(page, perpage)}
+        />
       </div>
     </div>
   );
