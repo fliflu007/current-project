@@ -46,10 +46,7 @@ export default function CreateProductForm() {
 
   // reset submit error if images are added after a failed submission
   useEffect(() => {
-    console.log("read Useffect");
-    console.log("hasAttemptedSubmit:", hasAttemptedSubmit);
     if (hasAttemptedSubmit && images.length > 0) {
-      console.log("resetting submit error");
       setSubmitError(null);
     }
   }, [images, hasAttemptedSubmit]);
@@ -67,10 +64,21 @@ export default function CreateProductForm() {
     // prepare the form data for api submission
     const payload = prepareFormData(data, images);
 
-    const res = await fetch("/api/product/create", {
-      method: "POST",
-      body: payload,
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/product/create", {
+        method: "POST",
+        body: payload,
+      });
+    } catch (error) {
+      setSubmitError(
+        "Network error: unable to reach the server. Please check your internet connection and try again.",
+      );
+      toast.error(
+        "Network error: unable to reach the server. Please check your internet connection and try again.",
+      );
+      return;
+    }
 
     console.log("STATUS:", res.status);
 
@@ -105,7 +113,7 @@ export default function CreateProductForm() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form onSubmit={form.handleSubmit(onSubmit)} onChange={() => setSubmitError(null)}>
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="name">Product name</FieldLabel>
