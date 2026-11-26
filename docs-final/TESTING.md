@@ -466,6 +466,15 @@ Backend protection layers verified for all mutating endpoints:
 - [ ] Invalid file type → error toast
 - [ ] File > 5MB → error toast
 
+#### Error Handling (Frontend)
+- [x] ERROR-01: Loading feedback during product creation/search → PASS
+- [x] ERROR-02: Success feedback after product creation → PASS
+- [x] ERROR-03: Validation messages for invalid product forms → PASS
+- [x] ERROR-04: Understandable error for duplicate product names → PASS
+- [x] ERROR-05: No success message after a failed request → PASS
+- [x] ERROR-06: Application remains usable after failure and successful resubmission → PASS
+- [x] ERROR-07: Offline network failure displays an error instead of falsely indicating success → PASS
+
 #### Product Listing
 - [ ] Products display with name, quantity, primary image
 - [ ] Pagination works (>10 products)
