@@ -60,10 +60,6 @@ export default function ProductDetails({
                     id: productDetail.data.id,
                     name: productDetail.data.name,
                     quantity: productDetail.data.quantity,
-                    description: productDetail.data.description,
-                    companyId: productDetail.data.companyId,
-                    createdAt: productDetail.data.createdAt,
-                    mainImageUrl: productDetail.images[0]?.url ?? null,
                   }}
                   type="IN"
                 />
@@ -72,10 +68,6 @@ export default function ProductDetails({
                     id: productDetail.data.id,
                     name: productDetail.data.name,
                     quantity: productDetail.data.quantity,
-                    description: productDetail.data.description,
-                    companyId: productDetail.data.companyId,
-                    createdAt: productDetail.data.createdAt,
-                    mainImageUrl: productDetail.images[0]?.url ?? null,
                   }}
                   type="OUT"
                 />

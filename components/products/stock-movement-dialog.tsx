@@ -22,18 +22,24 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, type FormEvent } from "react";
-import { ProductCardType } from "./product-card";
+
 import { AlertDestructive } from "@/components/alert";
 import { cn } from "cn";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 
+type StockMovementProduct = {
+  id: string;
+  name: string;
+  quantity: string;
+};
+
 export function StockMovementDialog({
   product,
   type,
 }: {
-  product: ProductCardType;
+  product: StockMovementProduct;
   type: "IN" | "OUT";
 }) {
   const router = useRouter();
@@ -79,7 +85,8 @@ export function StockMovementDialog({
         const errorObj = response.error ?? "Error while fetching";
         setErrorAPI(
           typeof errorObj === "object" && errorObj !== null
-            ? (errorObj as { message?: string }).message ?? "Error while fetching"
+            ? ((errorObj as { message?: string }).message ??
+                "Error while fetching")
             : String(errorObj),
         );
         return;
