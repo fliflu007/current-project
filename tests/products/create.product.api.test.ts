@@ -113,6 +113,7 @@ function configureSuccessMocks() {
     description: "Office laptop",
     quantity: "5",
     createdAt: new Date(),
+    barcode: null,
   });
 
   vi.mocked(db.select).mockReturnValue({

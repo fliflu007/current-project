@@ -46,6 +46,7 @@ export default function ProductEditForm({
     defaultValues: {
       name: product.name,
       description: product.description ?? "",
+      barcode: product.barcode ?? "",
     },
   });
 
@@ -122,6 +123,7 @@ export default function ProductEditForm({
     form.reset({
       name: product.name,
       description: product.description ?? "",
+      barcode: product.barcode ?? "",
     });
 
     setImages(normalizeProductImages(product.images));
@@ -151,12 +153,26 @@ export default function ProductEditForm({
                 )}
               </Field>
 
-              <Field>
+               <Field>
                 <FieldLabel htmlFor="description">Details</FieldLabel>
                 <Textarea id="description" {...form.register("description")} />
                 {form.formState.errors.description && (
                   <p className="text-sm text-red-500">
                     {form.formState.errors.description.message}
+                  </p>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="barcode">Barcode (optional)</FieldLabel>
+                <Input
+                  id="barcode"
+                  autoComplete="off"
+                  maxLength={22}
+                  {...form.register("barcode")}
+                />
+                {form.formState.errors.barcode && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.barcode.message}
                   </p>
                 )}
               </Field>

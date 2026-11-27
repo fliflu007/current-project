@@ -1,6 +1,7 @@
 import z from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { NotFoundError, ValidationError } from "@/lib/api/errors";
+import { ConflictError } from "@/lib/api/errors";
 import { validatePatchRequest } from "./patch-validation";
 import {
   deleteImageDB,
@@ -155,6 +156,27 @@ export async function PATCH(
           },
         },
         { status: 400 },
+      );
+    }
+    // Duplicate barcode (unique constraint violation)
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "cause" in error &&
+      error.cause &&
+      typeof error.cause === "object" &&
+      "code" in error.cause &&
+      error.cause.code === "23505"
+    ) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "CONFLICT",
+            message: "Barcode already in use",
+          },
+        },
+        { status: 409 },
       );
     }
     // Unexpected errors: database, Cloudinary, etc.

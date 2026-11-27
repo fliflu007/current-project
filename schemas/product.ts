@@ -3,7 +3,7 @@ import { products, productImages } from "@/db/schema";
 
 // ** CREATE PRODUCT
 
-// FORM
+// front end form validation
 export const createProductDataSchema = z.object({
   name: z
     .string()
@@ -12,6 +12,7 @@ export const createProductDataSchema = z.object({
   description: z.string().max(50, "Maximum 50 characters").optional(),
   // Accept number and string that are convertible=>number
   quantity: z.coerce.number().min(0, "Stock cannot be negative"),
+  barcode: z.string().trim().max(22, "Barcode is too long").optional(),
 });
 
 export type CreateProductData = z.infer<typeof createProductDataSchema>;
@@ -45,6 +46,7 @@ export const CreateProductSchema = z.object({
     )
     .min(1, "At least one image is required")
     .max(3, "Maximum 3 images allowed"),
+  barcode: z.string().trim().max(22).nullable().optional(),
 });
 
 // DB OUT

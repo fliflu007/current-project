@@ -60,11 +60,16 @@ export const products = pgTable(
     description: text("description"),
 
     quantity: numeric("quantity").default("0").notNull(),
+    barcode: text("barcode"),
   },
   (table) => [
     index("products_company_id_idx").on(table.companyId),
 
     uniqueIndex("products_company_name_unique").on(table.companyId, table.name),
+
+    uniqueIndex("products_company_barcode_unique")
+      .on(table.companyId, table.barcode)
+      .where(sql`${table.barcode} IS NOT NULL`),
   ],
 );
 

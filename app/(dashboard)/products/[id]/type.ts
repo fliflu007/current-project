@@ -6,6 +6,7 @@ export type ProductDetailUI = {
     name: string;
     description: string | null;
     quantity: string;
+    barcode: string | null;
   };
   images: {
     id: string;

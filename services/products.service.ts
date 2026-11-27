@@ -21,12 +21,13 @@ export async function insertProductDb(
         name: productData.name,
         description: productData.description,
         quantity: productData.quantity.toString(),
+        barcode: productData.barcode?.trim() || null,
       })
       .returning();
     console.log("injecting happened no ERROR");
 
     return product;
-  } catch (error) {
+   } catch (error) {
     console.log("Error as productdata dB insertion");
     if (
       typeof error === "object" &&
@@ -37,6 +38,11 @@ export async function insertProductDb(
       "code" in error.cause &&
       error.cause.code === "23505"
     ) {
+      const constraint =
+        "constraint" in error.cause ? String(error.cause.constraint) : "";
+      if (constraint.includes("barcode")) {
+        throw new ConflictError("A product with this barcode already exists.");
+      }
       console.log("throwinr ConflictError");
       throw new ConflictError("A product with this name already exists.");
     }
@@ -141,6 +147,9 @@ export async function updateProductDetails(
   productId: string,
   data: PatchProductDataApi,
 ) {
+  if (data.barcode !== undefined) {
+    (data as any).barcode = data.barcode?.trim() || null;
+  }
   const [updatedProducts] = await db
     .update(products)
     .set(data)
@@ -222,6 +231,25 @@ export async function addImagesToDB(
   }
 }
 
+export async function getProductByBarcode(barcode: string, companyId: string) {
+  const [product] = await db
+    .select()
+    .from(products)
+    .where(
+      and(
+        eq(products.companyId, companyId),
+        eq(products.barcode, barcode),
+      ),
+    )
+    .limit(1);
+
+  if (!product) return null;
+
+  return {
+    ...product,
+    quantity: Number(product.quantity),
+  };
+}
 export async function getProductForCompany(
   productId: string,
   companyId: string,

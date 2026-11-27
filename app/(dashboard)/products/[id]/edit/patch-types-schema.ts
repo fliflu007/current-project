@@ -8,6 +8,7 @@ export type ProductByIdResponse = {
   name: string;
   description: string | null;
   quantity: number;
+  barcode: string | null;
   images: {
     url: string;
     publicId: string;
@@ -34,6 +35,7 @@ export type ProductImage =
 export const patchProductDataSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().max(50, "Maximum 50 characters").optional(),
+  barcode: z.string().trim().max(22, "Barcode is too long").optional(),
 });
 
 export type PatchProductData = z.infer<typeof patchProductDataSchema>;

@@ -35,6 +35,7 @@ export default function CreateProductForm() {
       name: "",
       description: "",
       quantity: 0,
+      barcode: "",
     },
   });
   const { isSubmitting } = form.formState;
@@ -144,7 +145,7 @@ export default function CreateProductForm() {
                       {form.formState.errors.description.message}
                     </p>
                   )}
-                  <Field>
+                   <Field>
                     <FieldLabel htmlFor="quantity">Initial Stock</FieldLabel>
 
                     <Input
@@ -157,6 +158,20 @@ export default function CreateProductForm() {
                     {form.formState.errors.quantity && (
                       <p className="text-sm text-destructive">
                         {form.formState.errors.quantity.message}
+                      </p>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="barcode">Barcode (optional)</FieldLabel>
+                    <Input
+                      id="barcode"
+                      autoComplete="off"
+                      maxLength={22}
+                      {...form.register("barcode")}
+                    />
+                    {form.formState.errors.barcode && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.barcode.message}
                       </p>
                     )}
                   </Field>

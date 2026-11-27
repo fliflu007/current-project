@@ -67,6 +67,10 @@ export default function ProductDetails({
           <p className="text-sm font-bold mb-4">
             Current stock : <span>{productDetail.data.quantity}</span>
           </p>
+          <p className="text-sm font-bold mb-4">
+            Barcode:{" "}
+            <span>{productDetail.data.barcode ?? "No barcode"}</span>
+          </p>
           {role !== "viewer" && (
             <div className="flex justify-center gap-2">
               <div className="flex justify-center gap-2">
