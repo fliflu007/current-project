@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, Pencil, Trash } from "lucide-react";
 import {
@@ -21,6 +22,8 @@ import ProductDeleteDialog from "./product-delete-dialog";
 import { deleteByIdAction } from "@/app/(dashboard)/products/actions/action";
 import { ProductDetailUI } from "@/app/(dashboard)/products/[id]/type";
 import { StockMovementDialog } from "./stock-movement-dialog";
+import FullScreenCarousel from "@/components/fullscreencarousel";
+import { useState } from "react";
 
 export default function ProductDetails({
   productDetail,
@@ -29,6 +32,18 @@ export default function ProductDetails({
   productDetail: ProductDetailUI;
   role: UserRole;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const images = productDetail.images.map((image) => ({
+    url: image.url,
+    isPrimary: image.isPrimary,
+  }));
+
+  function handleImageClick(e: React.MouseEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    setIsOpen(true);
+  }
+
   console.log(
     "ProductDetails executed:",
     typeof window === "undefined" ? "SERVER" : "BROWSER",
@@ -85,7 +100,10 @@ export default function ProductDetails({
                     <div className="p-1">
                       <Card>
                         <CardContent className="p-2">
-                          <div className="relative aspect-square w-full">
+                          <div
+                            className="relative aspect-square w-full cursor-pointer"
+                            onClick={handleImageClick}
+                          >
                             <Image
                               src={image.url}
                               alt={`Product image ${index + 1}`}
@@ -124,6 +142,10 @@ export default function ProductDetails({
           </div>
         </div>
       </Card>
+
+      {isOpen && (
+        <FullScreenCarousel images={images} onClose={() => setIsOpen(false)} />
+      )}
     </div>
   );
 }
