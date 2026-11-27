@@ -4,15 +4,19 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { StockMovementDialog } from "./stock-movement-dialog";
+import ProductImageGallery from "./product-image-gallery";
 
 export type ProductCardType = {
-  mainImageUrl: string | null;
   id: string;
   companyId: string;
   createdAt: Date;
   name: string;
   description: string | null;
   quantity: string;
+  images: {
+    url: string;
+    isPrimary: boolean;
+  }[];
 };
 
 export default function ProductCard({
@@ -22,6 +26,7 @@ export default function ProductCard({
   product: ProductCardType;
   role: "admin" | "staff" | "viewer";
 }) {
+  const primaryImage = product.images.find((image) => image.isPrimary);
   const router = useRouter();
 
   function sendToDetails(e: React.MouseEvent<HTMLDivElement>) {
@@ -33,22 +38,14 @@ export default function ProductCard({
     <div onClick={sendToDetails}>
       <Card className="w-full px-3 sm:px-6 py-3 flex flex-col min-[600px]:flex-row items-stretch min-[600px]:items-center justify-between gap-4 rounded-none min-[600px]:rounded-xl shadow-sm bg-gray-50">
         <div className="flex min-w-0 flex-row items-center gap-3 sm:gap-4">
-          <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0">
-            <Image
-              src={product.mainImageUrl ?? "/placeholder.png"}
-              alt={product.name}
-              fill
-              sizes="80px"
-              className="object-cover"
-            />
-          </div>
+          <ProductImageGallery product={product} />
 
           <div className="min-w-0">
             <CardTitle className="flex flex-col gap-1 mb-2">
               <span className="text-xs font-normal text-muted-foreground">
                 Product Name:
               </span>
-              <span className="text-base font-semibold break-words">
+              <span className="text-base font-semibold wrap-break-word">
                 {product.name}
               </span>
             </CardTitle>

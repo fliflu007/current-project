@@ -73,40 +73,32 @@ export default async function Page({ searchParams }: PageProps) {
     .limit(pageSize)
     .offset(offset);
 
+  // list of product ID
   const productIds = productList.map((product) => product.id);
 
-  // GET PRODUCT IMAGES INFO
-  // getImage ProductID and url of Primary Image only.
-  const mainImages = await db
+  // bring image image and with is mainstatus as []
+  const allImages = await db
     .select({
       productId: productImages.productId,
       url: productImages.url,
+      isPrimary: productImages.isPrimary,
     })
     .from(productImages)
-    .where(
-      and(
-        inArray(productImages.productId, productIds),
-        eq(productImages.isPrimary, true),
-      ),
-    );
+    .where(and(inArray(productImages.productId, productIds)));
 
-  // GROUP IMAGE DATA AND IMAGES
+  // associate objectData with its image array
   const productsWithImages = productList.map((product) => {
-    const mainImage = mainImages.find(
-      (image) => image.productId === product.id,
-    );
-    if (!mainImage) {
-      throw new Error("Product has no primary image");
-    }
+    const images = allImages.filter((image) => image.productId === product.id);
+
     return {
       ...product,
-      mainImageUrl: mainImage.url,
+      images,
     };
   });
 
   return (
     <div>
-      <div className="sticky top-[88px] z-50 bg-background shadow-sm">
+      <div className="sticky top-22 z-50 bg-background shadow-sm">
         <div className="container mx-auto">
           <ProductUtilityBar currentPage={page} lastPage={lastPage} />
         </div>
