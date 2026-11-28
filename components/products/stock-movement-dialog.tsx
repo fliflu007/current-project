@@ -44,7 +44,6 @@ export function StockMovementDialog({
 }) {
   const router = useRouter();
 
-  console.log("prop:", type);
   const [reason, setReason] = useState<string | null>(null);
   const [errorAPI, setErrorAPI] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
