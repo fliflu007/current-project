@@ -25,6 +25,8 @@ const pageSizeSchema = z.coerce
   .refine((value) => [5, 10, 20, 50].includes(value));
 
 export default async function Page({ params, searchParams }: PageProps) {
+  console.log("🟢 PRODUCT DETAIL COMPONENT RENDERED");
+
   const { id } = await params;
   const search = await searchParams;
 
