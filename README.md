@@ -27,7 +27,7 @@ The goal of this project is to build a realistic inventory system with product m
 
 ### In Progress / Planned
 
-- [ ] Production deployment
+- [x] Production deployment
 - [ ] Additional E2E coverage (edit/delete/stock)
 
 ## 🛠️ Tech Stack
@@ -60,7 +60,7 @@ Drizzle ORM
 PostgreSQL
 ```
 
-Authentication and authorization will later be integrated into the API flow to ensure users can only access data belonging to their company and can only perform actions allowed by their role.
+Authentication and authorization are integrated into the API flow to ensure users can only access data belon their company and perform actions permitted by their assigned role.ging t
 
 ## 📦 Planned Features
 
@@ -94,17 +94,25 @@ Authentication and authorization will later be integrated into the API flow to e
 
 ## 🧪 Testing
 
-The API is being tested as features are implemented.
+Automated tests use Vitest with mocked database dependencies.
 
-Tests currently include:
+Tests cover:
 
-- Successful API operations
-- Validation failures
-- Not-found cases
-- Unexpected errors
-- Integration tests against the database
+Successful API operations
 
-The project uses **mocked API tests** (Vitest) and **Playwright E2E** tests. There are no real database integration tests; the DB is mocked in Vitest.
+Validation failures
+
+Not-found cases
+
+Unexpected errors
+
+Manual testing has also been performed across the application's main features, including product CRUD, authentication, image management, and inventory stock IN/OUT operations.
+
+No Playwright E2E tests or real database integration tests are currently included.
+
+Run automated tests:
+
+pnpm test
 
 ## ⚙️ Local Setup
 
