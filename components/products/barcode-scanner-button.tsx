@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ScanBarcode } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScanBarcode, X } from "lucide-react";
 
 export default function BarcodeScannerButton() {
   const router = useRouter();
@@ -113,33 +116,68 @@ export default function BarcodeScannerButton() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-lg bg-white p-4"
+            className="w-full max-w-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-bold">Scan Barcode</h2>
-              <button onClick={() => setOpen(false)} className="text-sm">
-                Close
-              </button>
+            <div className="my-10 flex justify-center">
+              <div className="w-full max-w-xl">
+                <Card className="shadow-xl w-full">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-bold">
+                        SCAN BARCODE
+                      </CardTitle>
+                      <button
+                        type="button"
+                        onClick={() => setOpen(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="Close"
+                      >
+                        <X className="size-5" />
+                      </button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <FieldGroup>
+                      <Field>
+                        <video
+                          ref={videoRef}
+                          className="h-48 w-full rounded-md bg-black object-cover"
+                          muted
+                          playsInline
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="manual-barcode">
+                          Manual barcode entry
+                        </FieldLabel>
+                        <Input
+                          id="manual-barcode"
+                          autoComplete="off"
+                          value={manual}
+                          onChange={(e) => setManual(e.target.value)}
+                          placeholder="Manual barcode entry"
+                        />
+                      </Field>
+                      <Field>
+                        {status && (
+                          <p className="text-sm text-muted-foreground">{status}</p>
+                        )}
+                      </Field>
+                      <Field>
+                        <Button
+                          className="py-5 font-bold"
+                          type="button"
+                          onClick={() => lookup(manual)}
+                        >
+                          Find
+                        </Button>
+                      </Field>
+                    </FieldGroup>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-            <video
-              ref={videoRef}
-              className="h-48 w-full bg-black object-cover"
-              muted
-              playsInline
-            />
-            <div className="mt-3 flex gap-2">
-              <input
-                className="flex-1 rounded border px-2 py-1 text-sm"
-                value={manual}
-                onChange={(e) => setManual(e.target.value)}
-                placeholder="Manual barcode entry"
-              />
-              <Button size="sm" onClick={() => lookup(manual)}>
-                Find
-              </Button>
-            </div>
-            {status && <p className="mt-2 text-sm text-muted-foreground">{status}</p>}
           </div>
         </div>
       )}
