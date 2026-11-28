@@ -10,25 +10,25 @@ The goal of this project is to build a realistic inventory system with product m
 
 - [x] PostgreSQL database setup
 - [x] Drizzle ORM configuration and migrations
-- [x] Product database schema
-- [x] Product CRUD API
+- [x] Product database schema (including optional barcode with per-company uniqueness)
+- [x] Product CRUD API (create, read, update, delete via Server Action)
 - [x] Zod request validation
 - [x] Product service layer
 - [x] API error handling
-- [x] Mock/API tests with Vitest
-- [x] Integration tests with the database
+- [x] Authentication with Supabase Auth
+- [x] Role-based authorization (admin/staff/viewer)
+- [x] Company/data isolation
+- [x] Inventory stock-in / stock-out
+- [x] Inventory movement history
+- [x] Product image management with Cloudinary
+- [x] Frontend dashboard and product management UI
+- [x] Barcode scanning and lookup (camera + manual entry)
+- [x] Automated tests with Vitest (60 passing) + Playwright (create flow)
 
 ### In Progress / Planned
 
-- [ ] Product deletion
-- [ ] Authentication with Supabase Auth
-- [ ] Role-based authorization
-- [ ] Company/data isolation
-- [ ] Inventory stock-in / stock-out
-- [ ] Inventory movement history
-- [ ] Product image management with Cloudinary
-- [ ] Frontend dashboard and product management UI
 - [ ] Production deployment
+- [ ] Additional E2E coverage (edit/delete/stock)
 
 ## 🛠️ Tech Stack
 
@@ -73,6 +73,7 @@ Authentication and authorization will later be integrated into the API flow to e
 - Product descriptions
 - Product quantities
 - Multiple product images
+- Optional barcode (per-company unique)
 
 ### Inventory Management
 
@@ -103,7 +104,7 @@ Tests currently include:
 - Unexpected errors
 - Integration tests against the database
 
-The project uses both **mocked API tests** and **integration tests** to verify different parts of the application.
+The project uses **mocked API tests** (Vitest) and **Playwright E2E** tests. There are no real database integration tests; the DB is mocked in Vitest.
 
 ## ⚙️ Local Setup
 
