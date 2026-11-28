@@ -13,7 +13,7 @@ import { prepareFormData } from "../utils/prepare-form-data";
 import { toast } from "sonner";
 import ProductImageManager from "./productimagemanager";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, LoaderCircle } from "lucide-react";
+import { AlertCircle, LoaderCircle, X } from "lucide-react";
 import { createProductDataSchema } from "@/schemas/product";
 import { useRouter } from "next/navigation";
 
@@ -109,12 +109,27 @@ export default function CreateProductForm() {
         <div className="w-full max-w-xl ">
           <Card className=" shadow-xl  w-full ">
             <CardHeader>
-              <CardTitle className="text-lg font-bold">
-                CREATE PRODUCT
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold">
+                  CREATE PRODUCT
+                </CardTitle>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.history.back();
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Close"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
-                <form onSubmit={form.handleSubmit(onSubmit)} onChange={() => setSubmitError(null)}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                onChange={() => setSubmitError(null)}
+              >
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="name">Product name</FieldLabel>
@@ -145,7 +160,7 @@ export default function CreateProductForm() {
                       {form.formState.errors.description.message}
                     </p>
                   )}
-                   <Field>
+                  <Field>
                     <FieldLabel htmlFor="quantity">Initial Stock</FieldLabel>
 
                     <Input
@@ -162,7 +177,9 @@ export default function CreateProductForm() {
                     )}
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="barcode">Barcode (optional)</FieldLabel>
+                    <FieldLabel htmlFor="barcode">
+                      Barcode (optional)
+                    </FieldLabel>
                     <Input
                       id="barcode"
                       autoComplete="off"
